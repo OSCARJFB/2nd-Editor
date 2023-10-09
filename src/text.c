@@ -7,6 +7,7 @@
 */
 
 #include <stdlib.h>
+#include "text.h"
 
 /**
  * Allocate a new node, set the character value and return the pointer. 
