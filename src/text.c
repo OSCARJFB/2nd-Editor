@@ -7,13 +7,7 @@
 */
 
 #include <stdlib.h>
-
-typedef struct text
-{
-	int ch;
-	struct text *next;
-	struct text *prev;	
-} text;
+#include "text.h"
 
 /**
  * Allocate a new node, set the character value and return the pointer. 
@@ -71,7 +65,7 @@ void add(text **cursor, int ch)
  * First check if cursor is NULL, if that is the case the list is empty.
  * Else check if the node to be deleted is at the end, middle or head(new head) of the list. 
  */
-void delete(text **cursor)
+void del(text **cursor)
 {
 	text *node = *cursor;
 	if(node == NULL)
@@ -97,7 +91,7 @@ void delete(text **cursor)
 	node = NULL;
 }
 
-void deleteAll(text *head)
+void delAll(text *head)
 {
 	text *node = *head, *nextNode = NULL; 
 	while (node != NULL)
