@@ -10,19 +10,20 @@
 #include "text.h"
 
 /**
- * Allocate a new node, set the character value and return the pointer. 
+ * Find next free memory slot in the array of nodes.
  */
-static inline text *createNode(int ch)
+static inline text *findMemorySlot(text *head, int index, int bufferSize)
 {
-	text node = *malloc(sizeof(text));
-	if(node == NULL)
+	text *node = head; 
+	for(int i = index; bufferSize; ++i)
 	{
-		exit(EXIT_FAILURE); 
+		if(node[i].next == NULL && node[i].prev == NULL)
+		{
+			return &node; 
+		}
 	}
-	node->ch = ch;
-	node->next = NULL; 
-	node->prev = NULL; 
-	return node; 
+
+	return NULL; 
 }
 
 /** 
@@ -30,9 +31,9 @@ static inline text *createNode(int ch)
  * Check if the list is empty, then create the list. 
  * If not check if the node should be added at the end, middle or head(new head) of the list. 
  */
-void add(text **cursor, int ch)
+void add(text **cursor, text *newnode, int ch)
 {	
-	text *node = cursor, *newnode = createNode(ch); 
+	text *node = cursor; 
 	if(node == NULL)
 	{
 		*cursor = newnode;
@@ -91,14 +92,36 @@ void del(text **cursor)
 	node = NULL;
 }
 
-void delAll(text *head)
+/**
+ * Increase the size of our node pool
+ */
+text *allocMoreNodes(text *head)
 {
-	text *node = *head, *nextNode = NULL; 
-	while (node != NULL)
-	{
-		nextNode = node->next == NULL ? NULL : node->next; 
-		free(node);
-		node = NULL; 
-		node = nextNode; 
-	}
+	const int size = 100;
+	head = realloc(head, size);
+	return head;
+}
+
+text *allocateNodesFromBuffer(char *buffer, int bufferSize)
+{
+        text *node = malloc(sizeof(text) * bufferSize);
+        if(node == NULL)
+        {
+                return NULL;
+        }
+
+        node[0].next = NULL;
+        node[0].prev = NULL;
+        node[0].ch = buffer[0];
+
+
+        for(int i = 1; i < bufferSize; ++i)
+        {
+                node[i - 1].next = &node[i];
+                node[i].next = NULL;
+                node[i].prev = &node[i - 1];
+                node[i].ch = buffer[i];
+        }
+
+        return node;
 }
