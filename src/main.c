@@ -8,10 +8,11 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-
-
+#include <ncurses.h>
+#include "text.h"
 
 int main(void)
 {
+	
 	return 0; 
 }
