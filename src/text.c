@@ -10,30 +10,34 @@
 #include "text.h"
 
 /**
- * Find next free memory slot in the array of nodes.
+ * Find the next free memory slot in the array of nodes.
  */
-static inline text *findMemorySlot(text *head, int index, int bufferSize)
+text *findAndSetNode(text *head, long id, int bufferSize, int ch)
 {
-	text *node = head; 
-	for(int i = index; bufferSize; ++i)
+	text *node = head;
+	for(int i = id; i < bufferSize; ++i)
 	{
-		if(node[i].next == NULL && node[i].prev == NULL)
-		{
-			return &node; 
+		if(!node[i].isInUse)
+		{	
+			node[i].next = NULL; 
+			node[i].prev = NULL; 
+			node[i].ch = ch; 
+			return &node[i]; 
 		}
 	}
 
 	return NULL; 
 }
 
+
 /** 
  * Add a new node to a doubly linked list. 
  * Check if the list is empty, then create the list. 
  * If not check if the node should be added at the end, middle or head(new head) of the list. 
  */
-void add(text **cursor, text *newnode, int ch)
+void add(text **cursor, text *newnode)
 {	
-	text *node = cursor; 
+	text *node = *cursor; 
 	if(node == NULL)
 	{
 		*cursor = newnode;
@@ -66,12 +70,12 @@ void add(text **cursor, text *newnode, int ch)
  * First check if cursor is NULL, if that is the case the list is empty.
  * Else check if the node to be deleted is at the end, middle or head(new head) of the list. 
  */
-void del(text **cursor)
+long del(text **cursor)
 {
 	text *node = *cursor;
 	if(node == NULL)
 	{
-		return NULL; 
+		return 0; 
 	}
 	
 	if(node->next == NULL && node->prev != NULL)
@@ -88,20 +92,34 @@ void del(text **cursor)
 		node->next->prev = NULL; 
 	}
 
-	free(node);
-	node = NULL;
+	node->isInUse = false; 
+	return node->id; 
 }
 
 /**
- * Increase the size of our node pool
+ * Increase the amount of allocated nodes.
+ * Realloc according to the size of expand. 
+ * Set the new nodes and return the new bufferSize.
  */
-text *allocMoreNodes(text *head)
+int allocateMoreNodes(text **head, int bufferSize)
 {
-	const int size = 100;
-	head = realloc(head, size);
-	return head;
+	const int expand = 100;
+	head = realloc(head, expand);
+	text *node = *head; 
+	for(long i = bufferSize; i < bufferSize + expand; ++i)
+	{
+		node[i].id = i; 
+		node[i].next = NULL; 
+		node[i].prev = NULL; 
+		node[i].isInUse = false; 
+	}
+
+	return bufferSize + expand;
 }
 
+/**
+ * Allocate and set nodes from a chunk of memory.
+ */
 text *allocateNodesFromBuffer(char *buffer, int bufferSize)
 {
         text *node = malloc(sizeof(text) * bufferSize);
@@ -109,19 +127,34 @@ text *allocateNodesFromBuffer(char *buffer, int bufferSize)
         {
                 return NULL;
         }
-
+	
+	// This is the head. 
+	node[0].id = 0; 
         node[0].next = NULL;
         node[0].prev = NULL;
         node[0].ch = buffer[0];
-
-
-        for(int i = 1; i < bufferSize; ++i)
+	node[0].isInUse = true; 
+	
+	// Set the rest of the nodes.
+        for(long i = 1; i < bufferSize; ++i)
         {
                 node[i - 1].next = &node[i];
+		node[i].id = i; 
                 node[i].next = NULL;
                 node[i].prev = &node[i - 1];
                 node[i].ch = buffer[i];
+		node[i].isInUse = true; 
         }
 
         return node;
+}
+
+/**
+ * This function will release the entire block of memory,
+ * which in turn completely free all nodes, since they are bound to the same allocation.
+ */
+void deallocateNodes(text *head)
+{
+	free(head); 
+	head = NULL; 
 }
