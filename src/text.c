@@ -12,10 +12,10 @@
 /**
  * Find the next free memory slot in the array of nodes.
  */
-text *findAndSetNode(text *head, long id, int bufferSize, int ch)
+text *findAndSetNode(text *head, uint32_t id, int bufferSize, int32_t ch)
 {
 	text *node = head;
-	for(int i = id; i < bufferSize; ++i)
+	for(int32_t i = id; i < bufferSize; ++i)
 	{
 		if(!node[i].isInUse)
 		{	
@@ -70,7 +70,7 @@ void add(text **cursor, text *newnode)
  * First check if cursor is NULL, if that is the case the list is empty.
  * Else check if the node to be deleted is at the end, middle or head(new head) of the list. 
  */
-long del(text **cursor)
+uint32_t del(text **cursor)
 {
 	text *node = *cursor;
 	if(node == NULL)
@@ -101,12 +101,12 @@ long del(text **cursor)
  * Realloc according to the size of expand. 
  * Set the new nodes and return the new bufferSize.
  */
-int allocateMoreNodes(text **head, int bufferSize)
+uint32_t allocateMoreNodes(text **head, uint32_t bufferSize)
 {
-	const int expand = 100;
+	const uint32_t expand = 100;
 	head = realloc(head, expand);
 	text *node = *head; 
-	for(long i = bufferSize; i < bufferSize + expand; ++i)
+	for(uint32_t i = bufferSize; i < bufferSize + expand; ++i)
 	{
 		node[i].id = i; 
 		node[i].next = NULL; 
@@ -120,7 +120,7 @@ int allocateMoreNodes(text **head, int bufferSize)
 /**
  * Allocate and set nodes from a chunk of memory.
  */
-text *allocateNodesFromBuffer(char *buffer, int bufferSize)
+text *allocateNodesFromBuffer(int8_t *buffer, uint32_t bufferSize)
 {
         text *node = malloc(sizeof(text) * bufferSize);
         if(node == NULL)
@@ -136,7 +136,7 @@ text *allocateNodesFromBuffer(char *buffer, int bufferSize)
 	node[0].isInUse = true; 
 	
 	// Set the rest of the nodes.
-        for(long i = 1; i < bufferSize; ++i)
+        for(uint32_t i = 1; i < bufferSize; ++i)
         {
                 node[i - 1].next = &node[i];
 		node[i].id = i; 
