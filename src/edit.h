@@ -6,11 +6,14 @@
 	Copyright (c) 2023 Oscar Bergström
 */
 
-#include <stdint.h>
-#include "file.h"
+#ifndef EDIT_H
+#define EDIT_H
 
-int main(int argc, char **argv)
-{	
-	startApp((int32_t)argc, (int8_t **)argv);
-	return 0;
-}
+#include <ncurses.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include "text.c"
+
+void edit(text *head); 
+
+#endif
