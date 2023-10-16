@@ -12,7 +12,7 @@
 #include <ncurses.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include "text.c"
+#include "text.h"
 
 void edit(text *head); 
 
