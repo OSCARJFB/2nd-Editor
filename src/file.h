@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "text.h"
+#include "edit.h"
 
 void startApp(int32_t argc, int8_t **argv); 
 

@@ -48,7 +48,13 @@ static int64_t getFileSize(FILE *fp)
 
 static int8_t *createBuffer(int64_t bufferSize, FILE *fp)
 {
+	if(bufferSize == 0)
+	{
+		return NULL; 
+	}
+
 	int8_t *buffer = malloc(bufferSize);
+	
 	if(buffer == NULL)
 	{
 		exit(EXIT_FAILURE);
@@ -65,11 +71,6 @@ void startApp(int32_t argc, int8_t **argv)
 	int64_t bufferSize = getFileSize(fp);
 	int8_t *buffer = createBuffer(bufferSize, fp);
 	text *head = allocateNodesFromBuffer(buffer, bufferSize);
-	
-	// Test print the nodes
-	for(text *node = head; node != NULL; node = node->next)
-	{
-		printf("%c", node->ch);
-	}
+	edit(head);
 }
 

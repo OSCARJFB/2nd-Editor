@@ -122,8 +122,14 @@ uint32_t allocateMoreNodes(text **head, uint32_t bufferSize)
  */
 text *allocateNodesFromBuffer(int8_t *buffer, uint32_t bufferSize)
 {
+	if(buffer == NULL || bufferSize == 0)
+	{
+		return NULL; 
+	}
+
         text *node = malloc(sizeof(text) * bufferSize);
-        if(node == NULL)
+        
+	if(node == NULL)
         {
                 return NULL;
         }

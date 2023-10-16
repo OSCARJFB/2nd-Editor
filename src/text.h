@@ -1,3 +1,11 @@
+/*
+	Writen by: Oscar Bergström
+	https://github.com/OSCARJFB
+
+	MIT License
+	Copyright (c) 2023 Oscar Bergström
+*/
+
 #ifndef TEXT_H
 #define TEXT_H
 
@@ -6,11 +14,10 @@
 
 typedef struct text
 {
-	uint32_t id; 
-	int32_t ch;
 	bool isInUse; 
-	struct text *next;
-	struct text *prev;	
+	uint32_t id; 
+	int32_t ch, x, y;
+	struct text *next, *prev;	
 } text;
 
 text *findMemorySlot(text *head, uint32_t id, uint32_t bufferSize, int32_t ch);
