@@ -12,7 +12,7 @@
 /**
  * Find the next free memory slot in the array of nodes.
  */
-text *findAndSetNode(text *head, uint32_t id, int bufferSize, int32_t ch)
+text *findMemorySlot(text *head, uint32_t id, int64_t bufferSize, int32_t ch)
 {
 	text *node = head;
 	for(int32_t i = id; i < bufferSize; ++i)
@@ -35,7 +35,7 @@ text *findAndSetNode(text *head, uint32_t id, int bufferSize, int32_t ch)
  * Check if the list is empty, then create the list. 
  * If not check if the node should be added at the end, middle or head(new head) of the list. 
  */
-void add(text **cursor, text *newnode)
+void addNode(text **cursor, text *newnode)
 {	
 	text *node = *cursor; 
 	if(node == NULL)
@@ -70,7 +70,7 @@ void add(text **cursor, text *newnode)
  * First check if cursor is NULL, if that is the case the list is empty.
  * Else check if the node to be deleted is at the end, middle or head(new head) of the list. 
  */
-uint32_t del(text **cursor)
+int64_t delNode(text **cursor)
 {
 	text *node = *cursor;
 	if(node == NULL)
@@ -101,12 +101,12 @@ uint32_t del(text **cursor)
  * Realloc according to the size of expand. 
  * Set the new nodes and return the new bufferSize.
  */
-uint32_t allocateMoreNodes(text **head, uint32_t bufferSize)
+int64_t allocateMoreNodes(text **head, int64_t bufferSize)
 {
 	const uint32_t expand = 100;
 	head = realloc(head, expand);
 	text *node = *head; 
-	for(uint32_t i = bufferSize; i < bufferSize + expand; ++i)
+	for(int64_t i = bufferSize; i < bufferSize + expand; ++i)
 	{
 		node[i].id = i; 
 		node[i].next = NULL; 
@@ -120,7 +120,7 @@ uint32_t allocateMoreNodes(text **head, uint32_t bufferSize)
 /**
  * Allocate and set nodes from a chunk of memory.
  */
-text *allocateNodesFromBuffer(int8_t *buffer, uint32_t bufferSize)
+text *allocateNodesFromBuffer(int8_t *buffer, int64_t bufferSize)
 {
 	if(buffer == NULL || bufferSize == 0)
 	{
@@ -142,7 +142,7 @@ text *allocateNodesFromBuffer(int8_t *buffer, uint32_t bufferSize)
 	node[0].isInUse = true; 
 	
 	// Set the rest of the nodes.
-        for(uint32_t i = 1; i < bufferSize; ++i)
+        for(int64_t i = 1; i < bufferSize; ++i)
         {
                 node[i - 1].next = &node[i];
 		node[i].id = i; 

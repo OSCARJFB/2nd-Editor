@@ -71,6 +71,6 @@ void startApp(int32_t argc, int8_t **argv)
 	int64_t bufferSize = getFileSize(fp);
 	int8_t *buffer = createBuffer(bufferSize, fp);
 	text *head = allocateNodesFromBuffer(buffer, bufferSize);
-	edit(head);
+	edit(head, bufferSize);
 }
 
