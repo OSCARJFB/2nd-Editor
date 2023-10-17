@@ -65,7 +65,7 @@ static text *moveArrowKeys(int32_t ch, text *head, text *cursor)
 	return cursor; 
 }
 
-static void printText(text *head, text *cursor, int viewStart)
+static int32_t printText(text *head, text *cursor, int viewStart)
 {
 	clear(); 
 
@@ -87,14 +87,16 @@ static void printText(text *head, text *cursor, int viewStart)
 		move(cursor->y, cursor->x);
 	}
 
-	refresh(); 
+	refresh();
+
+	return 1; 	
 }
 
-static void updateCoordinatesInView(text **head, int32_t viewStart, int32_t view)
+static int32_t setView(text **head, int32_t viewStart, int32_t view)
 {
 	if(*head == NULL)
 	{
-		return;
+		return 1;
 	}
 
 	int32_t newLines, newLinesInView, x, y; 
@@ -130,6 +132,8 @@ static void updateCoordinatesInView(text **head, int32_t viewStart, int32_t view
 			break;
 		}
 	}
+
+	return 1;
 }
 
 void edit(text *head)
@@ -137,12 +141,10 @@ void edit(text *head)
 	curseMode(true); 
 	
 	text *cursor = head; 
-	int32_t ch = 0, viewStart = 0, view = getmaxy(stdscr); 
 	
-	while(true)
+	int32_t viewStart = 0, view = getmaxy(stdscr); 
+	for(int32_t ch = 0; setView(&head, viewStart, view), printText(head, cursor, view); ch = getch())
 	{
-		updateCoordinatesInView(&head, viewStart, view); 
-		printText(head, cursor, view); 
 		moveArrowKeys(ch, head, cursor);
 	}
 
