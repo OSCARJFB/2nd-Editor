@@ -22,50 +22,7 @@ static void curseMode(bool isCurse)
 	endwin();
 }
 
-static text *moveArrowKeys(int32_t ch, text *head, text *cursor)
-{
-	if(head == NULL)
-	{
-		return NULL; 
-	}
-
-	if(cursor == NULL)
-	{
-		cursor = head; 
-	}
-	
-	switch(ch)
-	{
-		case KEY_UP:
-			while(cursor->prev != NULL)
-			{
-				cursor = cursor->next; 
-			}
-			break;
-		case KEY_DOWN:
-			while(cursor->next != NULL)
-			{
-				cursor = cursor->next; 
-			}			
-			break;
-		case KEY_LEFT:
-			if(cursor->prev == NULL)
-			{
-				cursor = cursor->prev; 
-			}
-			break;
-		case KEY_RIGHT:
-			if(cursor->next == NULL)
-			{
-				cursor = cursor->next; 
-			}
-			break;
-	}
-
-	return cursor; 
-}
-
-static void printText(text *head, text *cursor, int viewStart)
+static int32_t printText(text *head, text *cursor, int viewStart)
 {
 	clear(); 
 
@@ -87,14 +44,16 @@ static void printText(text *head, text *cursor, int viewStart)
 		move(cursor->y, cursor->x);
 	}
 
-	refresh(); 
+	refresh();
+
+	return 1; 	
 }
 
-static void updateCoordinatesInView(text **head, int32_t viewStart, int32_t view)
+static int32_t setView(text **head, int32_t viewStart, int32_t view)
 {
 	if(*head == NULL)
 	{
-		return;
+		return 1;
 	}
 
 	int32_t newLines, newLinesInView, x, y; 
@@ -130,20 +89,79 @@ static void updateCoordinatesInView(text **head, int32_t viewStart, int32_t view
 			break;
 		}
 	}
+
+	return 1;
 }
 
-void edit(text *head)
+void moveArrowKeys(int32_t ch, text **head, text **cursor)
+{
+	if(head == NULL)
+	{
+		return; 
+	}
+
+	if(cursor == NULL)
+	{
+		*cursor = *head; 
+	}
+
+	text *node = *cursor; 
+	switch(ch)
+	{
+		case KEY_UP:
+			while(node->prev != NULL)
+			{
+				node = node->next; 
+			}
+			break;
+		case KEY_DOWN:
+			while(node->next != NULL)
+			{
+				node = node->next; 
+			}			
+			break;
+		case KEY_LEFT:
+			if(node->prev == NULL)
+			{
+				node = node->prev; 
+			}
+			break;
+		case KEY_RIGHT:
+			if(node->next == NULL)
+			{
+				node = node->next; 
+			}
+			break;
+	}
+}
+
+void editText(text **head, text **cursor, 
+		int32_t ch, int64_t bufferSize, int32_t *id)
+{
+	if((ch >= ' ' && ch <= '~') || (ch == '\t' || ch == '\n'))
+	{
+		// TODO
+		// Check if more memory is need before doing other calls.
+		text *newNode = findMemorySlot(*head, *id, bufferSize, ch);
+		addNode(cursor, newNode);
+	}
+	else if(ch == KEY_BACKSPACE)
+	{
+		*id = delNode(cursor); 
+	}
+}
+
+void edit(text *head, int64_t bufferSize)
 {
 	curseMode(true); 
 	
 	text *cursor = head; 
-	int32_t ch = 0, viewStart = 0, view = getmaxy(stdscr); 
 	
-	while(true)
+	int32_t viewStart = 0, view = getmaxy(stdscr), id = 0;  
+	for(int32_t ch = 0; setView(&head, viewStart, view), printText(head, cursor, view); ch = getch())
 	{
-		updateCoordinatesInView(&head, viewStart, view); 
-		printText(head, cursor, view); 
-		moveArrowKeys(ch, head, cursor);
+		moveArrowKeys(ch, &head, &cursor);
+		editText(&head, &cursor, ch, bufferSize, &id);
 	}
 
 	curseMode(false); 

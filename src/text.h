@@ -15,16 +15,16 @@
 typedef struct text
 {
 	bool isInUse; 
-	uint32_t id; 
+	int64_t id; 
 	int32_t ch, x, y;
 	struct text *next, *prev;	
 } text;
 
-text *findMemorySlot(text *head, uint32_t id, uint32_t bufferSize, int32_t ch);
-void add(text **cursor, text *newnode);
-uint32_t del(text **cursor);
-uint32_t allocateMoreNodes(text **head, uint32_t bufferSize);
-text *allocateNodesFromBuffer(int8_t *buffer, uint32_t bufferSize);
+text *findMemorySlot(text *head, uint32_t id, int64_t bufferSize, int32_t ch);
+void addNode(text **cursor, text *newnode);
+int64_t delNode(text **cursor);
+int64_t allocateMoreNodes(text **head, int64_t bufferSize);
+text *allocateNodesFromBuffer(int8_t *buffer, int64_t bufferSize);
 void deallocateNodes(text *head);
 
 #endif

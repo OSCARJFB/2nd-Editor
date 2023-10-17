@@ -14,6 +14,6 @@
 #include <stdint.h>
 #include "text.h"
 
-void edit(text *head); 
+void edit(text *head, int64_t bufferSize); 
 
 #endif
