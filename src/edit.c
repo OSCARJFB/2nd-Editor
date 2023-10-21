@@ -135,20 +135,25 @@ void moveArrowKeys(int32_t ch, text **head, text **cursor)
 	}
 }
 
-void editText(text **head, text **cursor, 
+int64_t editText(text **head, text **cursor, 
 		int32_t ch, int64_t bufferSize, int32_t *id)
 {
 	if((ch >= ' ' && ch <= '~') || (ch == '\t' || ch == '\n'))
 	{
-		// TODO
-		// Check if more memory is need before doing other calls.
 		text *newNode = findMemorySlot(*head, *id, bufferSize, ch);
+		if(newNode == NULL)
+		{
+			bufferSize = allocateMoreNodes(head, bufferSize);
+		}
+		
 		addNode(cursor, newNode);
 	}
 	else if(ch == KEY_BACKSPACE)
 	{
 		*id = delNode(cursor); 
 	}
+
+	return bufferSize;
 }
 
 void edit(text *head, int64_t bufferSize)
@@ -161,7 +166,7 @@ void edit(text *head, int64_t bufferSize)
 	for(int32_t ch = 0; setView(&head, viewStart, view), printText(head, cursor, view); ch = getch())
 	{
 		moveArrowKeys(ch, &head, &cursor);
-		editText(&head, &cursor, ch, bufferSize, &id);
+		bufferSize = editText(&head, &cursor, ch, bufferSize, &id);
 	}
 
 	curseMode(false); 
