@@ -14,6 +14,11 @@
  */
 text *findMemorySlot(text *head, uint32_t id, int64_t bufferSize, int32_t ch)
 {
+	if(bufferSize == 0 || head == NULL)
+	{
+		return NULL; 
+	}
+
 	text *node = head;
 	for(int32_t i = id; i < bufferSize; ++i)
 	{
@@ -104,7 +109,12 @@ int64_t delNode(text **cursor)
 int64_t allocateMoreNodes(text **head, int64_t bufferSize)
 {
 	const uint32_t expand = 100;
-	head = realloc(head, expand);
+	*head = *head == NULL ? realloc(*head, expand) : malloc(expand);
+	if(head == NULL)
+	{
+		exit(EXIT_FAILURE);
+	}
+
 	text *node = *head; 
 	for(int64_t i = bufferSize; i < bufferSize + expand; ++i)
 	{
