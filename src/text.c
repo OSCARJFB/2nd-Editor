@@ -9,6 +9,33 @@
 #include <stdlib.h>
 #include "text.h"
 
+/** 
+ * Add a new node to a doubly linked list. 
+ * Check if the list is empty, then create the list. 
+ * If not check if the node should be added at the end, middle or head(new head) of the list. 
+ */
+void addNode(text **head, text *newNode, int32_t x, int32_t y)
+{	
+	text *node = *head;
+	for(; node->next != NULL; node = node->next)
+	{
+		//if(node->x == x && node->y == y)
+		//{
+		//	break;
+		//}
+	}
+	
+	if(*head == newNode) // is head node.
+	{
+		return; 
+	}
+	else
+	{
+		node->next = newNode;
+		newNode->prev = node;
+	}
+}
+
 /**
  * Find the next free memory slot in the array of nodes.
  */
@@ -26,79 +53,13 @@ text *findMemorySlot(text *head, uint32_t id, int64_t bufferSize, int32_t ch)
 		{	
 			node[i].next = NULL; 
 			node[i].prev = NULL; 
-			node[i].ch = ch; 
+			node[i].ch = ch;
+		       	node[i].isInUse = true;	
 			return &node[i]; 
 		}
 	}
 
 	return NULL; 
-}
-
-
-/** 
- * Add a new node to a doubly linked list. 
- * Check if the list is empty, then create the list. 
- * If not check if the node should be added at the end, middle or head(new head) of the list. 
- */
-void addNode(text **cursor, text *newnode)
-{	
-	text *node = *cursor; 
-	if(node == NULL)
-	{
-		*cursor = newnode;
-	        return;	
-	}
-
-     	if(node->next == NULL && node->prev != NULL)
-	{
-		node->prev->next = newnode; 
-	        newnode->prev = node->prev; 	
-	}
-	else if(node->next != NULL && node->prev != NULL)
-	{
-		node->next->prev = newnode;
-		newnode->prev = node;
-		newnode->next = node->next; 
-		node->next = newnode;
-	}
-	else if(node->prev == NULL)
-	{
-		node->prev = newnode; 
-		newnode->next = node; 
-	}
-	
-	*cursor = newnode; 
-}
-
-/**
- * Deletes a node at cursor location.
- * First check if cursor is NULL, if that is the case the list is empty.
- * Else check if the node to be deleted is at the end, middle or head(new head) of the list. 
- */
-int64_t delNode(text **cursor)
-{
-	text *node = *cursor;
-	if(node == NULL)
-	{
-		return 0; 
-	}
-	
-	if(node->next == NULL && node->prev != NULL)
-	{
-	 	node->prev->next = NULL; 
-	}
-	else if(node->next != NULL && node->prev != NULL)
-	{
-		node->prev->next = node->next;
-		node->next->prev = node->prev->next;	
-	}
-	else if(node->prev == NULL)
-	{
-		node->next->prev = NULL; 
-	}
-
-	node->isInUse = false; 
-	return node->id; 
 }
 
 /**
@@ -108,8 +69,8 @@ int64_t delNode(text **cursor)
  */
 int64_t allocateMoreNodes(text **head, int64_t bufferSize)
 {
-	const uint32_t expand = 100;
-	*head = *head == NULL ? realloc(*head, expand) : malloc(expand);
+	const uint32_t expand = 10;
+	*head = *head != NULL ? realloc(*head, (bufferSize + expand) * sizeof(text)) : malloc(expand * sizeof(text));
 	if(head == NULL)
 	{
 		exit(EXIT_FAILURE);
