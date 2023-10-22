@@ -22,7 +22,7 @@ static void curseMode(bool isCurse)
 	endwin();
 }
 
-static int32_t printText(text *head, text *cursor, int viewStart)
+static int32_t printText(text *head, int32_t viewStart)
 {
 	clear(); 
 
@@ -38,12 +38,6 @@ static int32_t printText(text *head, text *cursor, int viewStart)
 		mvwaddch(stdscr, node->y, node->x, node->ch); 
 	}
 	
-	if(head != NULL)
-	{
-		cursor = cursor == NULL ? head : cursor; 
-		move(cursor->y, cursor->x);
-	}
-
 	refresh();
 
 	return 1; 	
@@ -93,50 +87,7 @@ static int32_t setView(text **head, int32_t viewStart, int32_t view)
 	return 1;
 }
 
-void moveArrowKeys(int32_t ch, text **head, text **cursor)
-{
-	if(head == NULL)
-	{
-		return; 
-	}
-
-	if(cursor == NULL)
-	{
-		*cursor = *head; 
-	}
-
-	text *node = *cursor; 
-	switch(ch)
-	{
-		case KEY_UP:
-			while(node->prev != NULL)
-			{
-				node = node->next; 
-			}
-			break;
-		case KEY_DOWN:
-			while(node->next != NULL)
-			{
-				node = node->next; 
-			}			
-			break;
-		case KEY_LEFT:
-			if(node->prev == NULL)
-			{
-				node = node->prev; 
-			}
-			break;
-		case KEY_RIGHT:
-			if(node->next == NULL)
-			{
-				node = node->next; 
-			}
-			break;
-	}
-}
-
-int64_t editText(text **head, text **cursor, 
-		int32_t ch, int64_t bufferSize, int32_t *id)
+int64_t editText(text **head, int32_t ch, int64_t bufferSize, int32_t *id, int32_t x, int32_t y)
 {
 	if((ch >= ' ' && ch <= '~') || (ch == '\t' || ch == '\n'))
 	{
@@ -144,13 +95,10 @@ int64_t editText(text **head, text **cursor,
 		if(newNode == NULL)
 		{
 			bufferSize = allocateMoreNodes(head, bufferSize);
+			newNode = findMemorySlot(*head, *id, bufferSize, ch);
 		}
 		
-		addNode(cursor, newNode);
-	}
-	else if(ch == KEY_BACKSPACE)
-	{
-		*id = delNode(cursor); 
+		addNode(head, newNode, x, y);
 	}
 
 	return bufferSize;
@@ -160,13 +108,14 @@ void edit(text *head, int64_t bufferSize)
 {
 	curseMode(true); 
 	
-	text *cursor = head; 
-	
-	int32_t viewStart = 0, view = getmaxy(stdscr), id = 0;  
-	for(int32_t ch = 0; setView(&head, viewStart, view), printText(head, cursor, view); ch = getch())
+	int32_t viewStart = 0, view = getmaxy(stdscr); x = 0, y = 0;
+	int64_t id = 0; 
+
+	for(int32_t ch = 0; ch != EOF; ch = getch())
 	{
-		moveArrowKeys(ch, &head, &cursor);
-		bufferSize = editText(&head, &cursor, ch, bufferSize, &id);
+		bufferSize = editText(&head, ch, bufferSize, &id, x, y);
+		setView(&head, viewStart, view);
+		printText(head, view);
 	}
 
 	curseMode(false); 
