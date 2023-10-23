@@ -87,34 +87,66 @@ static int32_t setView(text **head, int32_t viewStart, int32_t view)
 	return 1;
 }
 
-int64_t editText(text **head, int32_t ch, int64_t bufferSize, int32_t *id, int32_t x, int32_t y)
+void setxy(int32_t ch, int32_t *x, int32_t *y)
+{
+	
+	switch(ch)
+	{
+		case '\n':
+			++*y; 
+			*x = 0;
+		        break;	
+		case KEY_BACKSPACE:
+			--*y;
+			*x = 0;
+		       	break; 	
+		default:
+			++*x;
+		        break; 	
+	}
+}	
+
+int64_t addText(text **head, int32_t ch, int64_t bufferSize, 
+		int64_t id, int32_t x, int32_t y)
 {
 	if((ch >= ' ' && ch <= '~') || (ch == '\t' || ch == '\n'))
 	{
-		text *newNode = findMemorySlot(*head, *id, bufferSize, ch);
+		text *newNode = findMemorySlot(*head, id, bufferSize, ch);
 		if(newNode == NULL)
 		{
 			bufferSize = allocateMoreNodes(head, bufferSize);
-			newNode = findMemorySlot(*head, *id, bufferSize, ch);
+			newNode = findMemorySlot(*head, id, bufferSize, ch);
 		}
 		
 		addNode(head, newNode, x, y);
 	}
-
 	return bufferSize;
+}
+
+uint32_t deleteText(text **head, int32_t ch, int64_t id, int32_t x, int32_t y)
+{
+	if(ch != KEY_BACKSPACE)
+	{
+		return id;
+	}
+
+	deleteNode(head, x, y); 
+	return id;
 }
 
 void edit(text *head, int64_t bufferSize)
 {
 	curseMode(true); 
 	
-	int32_t viewStart = 0, view = getmaxy(stdscr); x = 0, y = 0;
+	int32_t viewStart = 0, view = getmaxy(stdscr), x = 0, y = 0;
 	int64_t id = 0; 
 
 	for(int32_t ch = 0; ch != EOF; ch = getch())
 	{
-		bufferSize = editText(&head, ch, bufferSize, &id, x, y);
+		bufferSize = addText(&head, ch, bufferSize, id, x, y);
+		id = deleteText(&head, ch, id, x, y); 
 		setView(&head, viewStart, view);
+		getyx(stdscr, y, x); 
 		printText(head, view);
 	}
 

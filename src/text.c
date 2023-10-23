@@ -19,10 +19,10 @@ void addNode(text **head, text *newNode, int32_t x, int32_t y)
 	text *node = *head;
 	for(; node->next != NULL; node = node->next)
 	{
-		//if(node->x == x && node->y == y)
-		//{
-		//	break;
-		//}
+		if(node->x == x && node->y == y)
+		{
+			break;
+		}
 	}
 	
 	if(*head == newNode) // is head node.
@@ -36,10 +36,45 @@ void addNode(text **head, text *newNode, int32_t x, int32_t y)
 	}
 }
 
+int64_t deleteNode(text **head, int32_t x, int32_t y)
+{
+	text *node = *head;
+	if(node == NULL)
+	{
+		return 0; 
+	}
+	
+	for(; node->next != NULL; node = node->next)
+	{
+		if(node->x == x && node->y == y)
+		{
+			break;
+		}
+	}
+
+
+	if(node->next == NULL && node->prev != NULL)
+	{
+	 	node->prev->next = NULL; 
+	}
+	else if(node->next != NULL && node->prev != NULL)
+	{
+		node->prev->next = node->next;
+		node->next->prev = node->prev->next;	
+	}
+	else if(node->prev == NULL)
+	{
+		node->next->prev = NULL; 
+	}
+
+	node->isInUse = false; 
+	return node->id; 
+}
+
 /**
  * Find the next free memory slot in the array of nodes.
  */
-text *findMemorySlot(text *head, uint32_t id, int64_t bufferSize, int32_t ch)
+text *findMemorySlot(text *head, int64_t id, int64_t bufferSize, int32_t ch)
 {
 	if(bufferSize == 0 || head == NULL)
 	{
@@ -47,7 +82,7 @@ text *findMemorySlot(text *head, uint32_t id, int64_t bufferSize, int32_t ch)
 	}
 
 	text *node = head;
-	for(uint32_t i = id; i < bufferSize; ++i)
+	for(int64_t i = id; i < bufferSize; ++i)
 	{
 		if(!node[i].isInUse)
 		{	
