@@ -47,7 +47,7 @@ text *findMemorySlot(text *head, uint32_t id, int64_t bufferSize, int32_t ch)
 	}
 
 	text *node = head;
-	for(int32_t i = id; i < bufferSize; ++i)
+	for(uint32_t i = id; i < bufferSize; ++i)
 	{
 		if(!node[i].isInUse)
 		{	
