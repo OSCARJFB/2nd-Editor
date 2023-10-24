@@ -14,6 +14,11 @@
 #include <stdint.h>
 #include "text.h"
 
+typedef struct termxy
+{
+	int32_t x, y; 
+} termxy; 
+
 void edit(text *head, int64_t bufferSize); 
 
 #endif

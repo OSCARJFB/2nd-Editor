@@ -22,7 +22,7 @@ static void curseMode(bool isCurse)
 	endwin();
 }
 
-static int32_t printText(text *head, int32_t viewStart)
+static void printText(text *head, int32_t viewStart, bool drawArrowKeys, termxy xy)
 {
 	clear(); 
 
@@ -37,10 +37,13 @@ static int32_t printText(text *head, int32_t viewStart)
 
 		mvwaddch(stdscr, node->y, node->x, node->ch); 
 	}
-	
-	refresh();
 
-	return 1; 	
+	if(drawArrowKeys)
+	{
+		move(xy.y, xy.x);
+	}
+
+	refresh(); 
 }
 
 static int32_t setView(text **head, int32_t viewStart, int32_t view)
@@ -87,67 +90,70 @@ static int32_t setView(text **head, int32_t viewStart, int32_t view)
 	return 1;
 }
 
-void setxy(int32_t ch, int32_t *x, int32_t *y)
-{
-	
-	switch(ch)
-	{
-		case '\n':
-			++*y; 
-			*x = 0;
-		        break;	
-		case KEY_BACKSPACE:
-			--*y;
-			*x = 0;
-		       	break; 	
-		default:
-			++*x;
-		        break; 	
-	}
-}	
-
-int64_t addText(text **head, int32_t ch, int64_t bufferSize, 
-		int64_t id, int32_t x, int32_t y)
+int64_t modifyText(text **head, int32_t ch, int64_t bufferSize, 
+		int64_t *id, termxy xy)
 {
 	if((ch >= ' ' && ch <= '~') || (ch == '\t' || ch == '\n'))
 	{
-		text *newNode = findMemorySlot(*head, id, bufferSize, ch);
+		text *newNode = findMemorySlot(*head, *id, bufferSize, ch);
 		if(newNode == NULL)
 		{
 			bufferSize = allocateMoreNodes(head, bufferSize);
-			newNode = findMemorySlot(*head, id, bufferSize, ch);
+			newNode = findMemorySlot(*head, *id, bufferSize, ch);
 		}
 		
-		addNode(head, newNode, x, y);
+		addNode(head, newNode, xy.x, xy.y);
 	}
+	else if(ch == KEY_BACKSPACE)
+	{
+		*id = deleteNode(head, xy.x, xy.y); 
+	}
+
 	return bufferSize;
 }
 
-uint32_t deleteText(text **head, int32_t ch, int64_t id, int32_t x, int32_t y)
+termxy moveCursor(int32_t ch, termxy xy, bool *drawArrowKeys)
 {
-	if(ch != KEY_BACKSPACE)
+	switch(ch)
 	{
-		return id;
-	}
+		case KEY_UP:
+			--xy.y;
+			break;
+		case KEY_DOWN:
+			++xy.y;
+			break; 
+		case KEY_LEFT:
+			--xy.x;
+			break;
+		case KEY_RIGHT:
+			++xy.x;
+			break; 
+		default:
+			*drawArrowKeys = false; 
+			return xy; 
 
-	deleteNode(head, x, y); 
-	return id;
+	}
+	
+	*drawArrowKeys = true;  
+	return xy; 
 }
 
 void edit(text *head, int64_t bufferSize)
 {
 	curseMode(true); 
 	
-	int32_t viewStart = 0, view = getmaxy(stdscr), x = 0, y = 0;
+	bool drawArrowKeys = false; 
+	int32_t viewStart = 0, view = getmaxy(stdscr);
 	int64_t id = 0; 
+	termxy xy = {0, 0};
 
 	for(int32_t ch = 0; ch != EOF; ch = getch())
 	{
-		bufferSize = addText(&head, ch, bufferSize, id, x, y);
-		id = deleteText(&head, ch, id, x, y); 
+		getyx(stdscr, xy.y, xy.x); 
+		bufferSize = modifyText(&head, ch, bufferSize, &id, xy);
+		xy = moveCursor(ch, xy, &drawArrowKeys); 
 		setView(&head, viewStart, view);
-		getyx(stdscr, y, x); 
-		printText(head, view);
+		printText(head, view, drawArrowKeys, xy);
 	}
 
 	curseMode(false); 
