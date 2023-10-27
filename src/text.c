@@ -9,14 +9,8 @@
 #include <stdlib.h>
 #include "text.h"
 
-/** 
- * Add a new node to a doubly linked list. 
- * Check if the list is empty, then create the list. 
- * If not check if the node should be added at the end, middle or head(new head) of the list. 
- */
-void addNode(text **head, text *newNode, int32_t x, int32_t y)
-{	
-	text *node = *head;
+static text *getNode(text *node, int32_t x, int32_t y)
+{
 	for(; node->next != NULL; node = node->next)
 	{
 		if(node->x == x && node->y == y)
@@ -26,9 +20,22 @@ void addNode(text **head, text *newNode, int32_t x, int32_t y)
 		}
 	}
 
+	return node; 
+}
+
+
+/** 
+ * Add a new node to a doubly linked list. 
+ * Check if the list is empty, then create the list. 
+ * If not check if the node should be added at the end, middle or head(new head) of the list. 
+ */
+text *addNode(text **head, text *newNode, int32_t x, int32_t y)
+{	
+	text *node = getNode(*head, x, y); 
+
 	if(*head == newNode) 			// First node, head node.
 	{
-		return; 
+		return *head; 
 	}
 	else if(x == 0 && y == 0)		// At head node.
 	{
@@ -40,7 +47,8 @@ void addNode(text **head, text *newNode, int32_t x, int32_t y)
 	        newNode->next = (*head)->next; 
 
 		(*head)->next = newNode; 
-		newNode->prev = (*head); 
+		newNode->prev = (*head);
+	        return *head; 	
 	}
 	else if(node->next == NULL) 		// At the end of the list.
 	{
@@ -55,25 +63,24 @@ void addNode(text **head, text *newNode, int32_t x, int32_t y)
 		node->next = newNode; 
 
 	}
+
+	return newNode; 
 }
 
-int64_t deleteNode(text **head, int32_t x, int32_t y)
+/**
+ * Unlinks a node in the list and return the id of the node.
+ * This Id can be used to access the node if it should be reused. 
+ */
+text *deleteNode(text **head, int32_t x, int32_t y, int64_t *id)
 {
-	text *node = *head;
-	if(node == NULL)
+	if(x == 0 && y == 0)
 	{
-		return 0; 
+		return NULL; 
 	}
+
+	text *node = getNode(*head, x, y); 
+	text *newNode = node->prev;
 	
-	for(; node->next != NULL; node = node->next)
-	{
-		if(node->x == x && node->y == y)
-		{
-			break;
-		}
-	}
-
-
 	if(node->next == NULL && node->prev != NULL)
 	{
 	 	node->prev->next = NULL; 
@@ -89,7 +96,9 @@ int64_t deleteNode(text **head, int32_t x, int32_t y)
 	}
 
 	node->isInUse = false; 
-	return node->id; 
+	*id = node->id; 
+
+	return newNode; 
 }
 
 /**

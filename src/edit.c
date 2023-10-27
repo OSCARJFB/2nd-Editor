@@ -22,7 +22,7 @@ static void curseMode(bool isCurse)
 	endwin();
 }
 
-static void printText(text *head, int32_t viewStart, bool drawArrowKeys, termxy xy)
+static void printText(text *head, int32_t viewStart, termxy xy)
 {
 	clear(); 
 
@@ -38,12 +38,14 @@ static void printText(text *head, int32_t viewStart, bool drawArrowKeys, termxy 
 		mvwaddch(stdscr, node->y, node->x, node->ch); 
 	}
 
-	if(drawArrowKeys)
-	{
-		move(xy.y, xy.x);
-	}
+	move(xy.y, xy.x);
 
 	refresh(); 
+}
+
+static int32_t getViewBounderies(void)
+{
+	return 0;
 }
 
 static int32_t setView(text **head, int32_t viewStart, int32_t view)
@@ -90,29 +92,33 @@ static int32_t setView(text **head, int32_t viewStart, int32_t view)
 	return 1;
 }
 
-int64_t modifyText(text **head, int32_t ch, int64_t bufferSize, 
-		int64_t *id, termxy xy)
+static text *addText(text **head, text *cursor, int32_t ch, int64_t *bufferSize, int64_t id, termxy xy)
 {
 	if((ch >= ' ' && ch <= '~') || (ch == '\t' || ch == '\n'))
 	{
-		text *newNode = findMemorySlot(*head, *id, bufferSize, ch);
+		text *newNode = findMemorySlot(*head, id, *bufferSize, ch);
 		if(newNode == NULL)
 		{
-			bufferSize = allocateMoreNodes(head, bufferSize);
-			newNode = findMemorySlot(*head, *id, bufferSize, ch);
+			*bufferSize = allocateMoreNodes(head, *bufferSize);
+			newNode = findMemorySlot(*head, id, *bufferSize, ch);
 		}
 		
-		addNode(head, newNode, xy.x, xy.y);
-	}
-	else if(ch == KEY_BACKSPACE)
-	{
-		*id = deleteNode(head, xy.x, xy.y); 
+		cursor = addNode(head, newNode, xy.x, xy.y);
 	}
 
-	return bufferSize;
+	return cursor;
 }
 
-termxy moveCursor(int32_t ch, termxy xy, bool *drawArrowKeys)
+static text *deleteText(text **head, text* cursor, int32_t ch, int64_t *id, termxy xy)
+{
+	if(ch != KEY_BACKSPACE)
+	{
+		return cursor; 
+	}
+	return deleteNode(head, xy.x, xy.y, id); 
+}
+
+static termxy readArrowKeys(int32_t ch, termxy xy)
 {
 	switch(ch)
 	{
@@ -128,13 +134,24 @@ termxy moveCursor(int32_t ch, termxy xy, bool *drawArrowKeys)
 		case KEY_RIGHT:
 			++xy.x;
 			break; 
-		default:
-			*drawArrowKeys = false; 
-			return xy; 
-
 	}
 	
-	*drawArrowKeys = true;  
+	return xy; 
+}
+
+termxy updateCursor(text *cursor, termxy xy)
+{
+	if(cursor == NULL)
+	{
+		xy.x = 0;
+		xy.y = 0; 
+	}
+	else
+	{
+		xy.x = cursor->x; 
+		xy.y = cursor->y;
+	}
+
 	return xy; 
 }
 
@@ -142,7 +159,7 @@ void edit(text *head, int64_t bufferSize)
 {
 	curseMode(true); 
 	
-	bool drawArrowKeys = false; 
+	text *cursor = NULL; 
 	int32_t viewStart = 0, view = getmaxy(stdscr);
 	int64_t id = 0; 
 	termxy xy = {0, 0};
@@ -150,10 +167,19 @@ void edit(text *head, int64_t bufferSize)
 	for(int32_t ch = 0; ch != EOF; ch = getch())
 	{
 		getyx(stdscr, xy.y, xy.x); 
-		bufferSize = modifyText(&head, ch, bufferSize, &id, xy);
-		xy = moveCursor(ch, xy, &drawArrowKeys); 
+		
+		// Add or delete characters to the text list.
+		cursor = addText(&head, cursor, ch, &bufferSize, id, xy);
+		cursor = deleteText(&head, cursor, ch, &id, xy); 
+
+		// Move the cursor using the arrow keys.
+		xy = readArrowKeys(ch, xy); 
+		
+		// Get, set and print the current view.
+		getViewBounderies();
 		setView(&head, viewStart, view);
-		printText(head, view, drawArrowKeys, xy);
+		xy = updateCursor(cursor, xy); 
+		printText(head, view, xy);
 	}
 
 	curseMode(false); 
