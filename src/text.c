@@ -21,18 +21,39 @@ void addNode(text **head, text *newNode, int32_t x, int32_t y)
 	{
 		if(node->x == x && node->y == y)
 		{
+			node = node->prev != NULL ? node->prev : node; 
 			break;
 		}
 	}
-	
-	if(*head == newNode) // is head node.
+
+	if(*head == newNode) 			// First node, head node.
 	{
 		return; 
 	}
-	else
+	else if(x == 0 && y == 0)		// At head node.
+	{
+		int32_t ch = (*head)->ch;
+		(*head)->ch = newNode->ch; 
+		newNode->ch = ch;
+		
+		(*head)->next->prev = newNode;
+	        newNode->next = (*head)->next; 
+
+		(*head)->next = newNode; 
+		newNode->prev = (*head); 
+	}
+	else if(node->next == NULL) 		// At the end of the list.
 	{
 		node->next = newNode;
 		newNode->prev = node;
+	}
+	else if(node->next != NULL)		// At the middle of the list.
+	{
+		node->next->prev = newNode; 
+		newNode->next = node->next; 
+		newNode->prev = node;
+		node->next = newNode; 
+
 	}
 }
 
@@ -64,7 +85,7 @@ int64_t deleteNode(text **head, int32_t x, int32_t y)
 	}
 	else if(node->prev == NULL)
 	{
-		node->next->prev = NULL; 
+		node->next->prev = NULL;	
 	}
 
 	node->isInUse = false; 
