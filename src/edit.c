@@ -1,5 +1,5 @@
 /*
-	Writen by: Oscar Bergström
+  	Writen by: Oscar Bergström
 	https://github.com/OSCARJFB
 
 	MIT License
@@ -29,7 +29,7 @@ static void printText(text *head, int32_t viewStart, termxy xy)
 	int32_t newLines = 0;
 	for(text *node = head; node != NULL; node = node->next)
 	{
-		newLines += node->ch == '\n' ? 1 : 0; 
+		newLines += node->ch == '\n' ? 1 : 0;
 		if(viewStart < newLines)
 		{
 			continue; 
@@ -56,7 +56,7 @@ static int32_t setView(text **head, int32_t viewStart, int32_t view)
 	}
 
 	int32_t newLines, newLinesInView, x, y; 
-      	newLines = newLinesInView = x = y = 0; 
+	newLines = newLinesInView = x = y = 0; 
 
 	for(text *node = *head; node != NULL; node = node->next)
 	{
@@ -102,7 +102,7 @@ static text *addText(text **head, text *cursor, int32_t ch, int64_t *bufferSize,
 			*bufferSize = allocateMoreNodes(head, *bufferSize);
 			newNode = findMemorySlot(*head, id, *bufferSize, ch);
 		}
-		
+
 		cursor = addNode(head, newNode, xy.x, xy.y);
 	}
 
@@ -118,28 +118,61 @@ static text *deleteText(text **head, text* cursor, int32_t ch, int64_t *id, term
 	return deleteNode(head, xy.x, xy.y, id); 
 }
 
-static termxy readArrowKeys(int32_t ch, termxy xy)
+/**
+ * Read the arrow key and set cursor.
+ * If key is up or down we iterate until we find a newline.
+ * else f key left, right, we take one step prev or next.
+ */
+static text *readArrowKeys(text *head, text *cursor, int32_t ch)
 {
+	if(head == NULL)
+	{
+		return NULL; 
+	}
+		
 	switch(ch)
 	{
 		case KEY_UP:
-			--xy.y;
+			 
+			for(bool isOnNewLine = false; cursor->prev != NULL && !isOnNewLine; cursor = cursor->prev)
+			{
+				if(cursor->ch == '\n')
+				{
+					isOnNewLine = true; 
+				}
+			}
 			break;
 		case KEY_DOWN:
-			++xy.y;
+			for(bool isOnNewLine = false; cursor->next != NULL && !isOnNewLine; cursor = cursor->next)
+			{
+				if(cursor->ch == '\n')
+				{
+					isOnNewLine = true;
+				}
+			}
 			break; 
 		case KEY_LEFT:
-			--xy.x;
+			if(cursor->next != NULL)
+			{
+				cursor = cursor->prev->ch != '\n' ? cursor->prev : cursor;
+		       	}
 			break;
 		case KEY_RIGHT:
-			++xy.x;
+			if(cursor->next != NULL)
+			{
+				cursor = cursor->next->ch != '\n' ? cursor->next : cursor;
+		       	}	
 			break; 
 	}
-	
-	return xy; 
+
+	return cursor; 
 }
 
-termxy updateCursor(text *cursor, termxy xy)
+
+/**
+ * Read the cursor node and update the cursor coordinates accordingly.
+ */
+static termxy updateCursor(text *cursor, termxy xy, int32_t ch)
 {
 	if(cursor == NULL)
 	{
@@ -148,8 +181,8 @@ termxy updateCursor(text *cursor, termxy xy)
 	}
 	else
 	{
-		xy.x = cursor->x; 
-		xy.y = cursor->y;
+		xy.x = ch == '\n' ? 0 : cursor->x + 1;  
+		xy.y = ch == '\n' ? cursor->y + 1 : cursor->y;  
 	}
 
 	return xy; 
@@ -158,7 +191,7 @@ termxy updateCursor(text *cursor, termxy xy)
 void edit(text *head, int64_t bufferSize)
 {
 	curseMode(true); 
-	
+
 	text *cursor = NULL; 
 	int32_t viewStart = 0, view = getmaxy(stdscr);
 	int64_t id = 0; 
@@ -167,18 +200,16 @@ void edit(text *head, int64_t bufferSize)
 	for(int32_t ch = 0; ch != EOF; ch = getch())
 	{
 		getyx(stdscr, xy.y, xy.x); 
-		
-		// Add or delete characters to the text list.
+
+		// Read user Interaction.  
 		cursor = addText(&head, cursor, ch, &bufferSize, id, xy);
 		cursor = deleteText(&head, cursor, ch, &id, xy); 
+		cursor = readArrowKeys(head, cursor, ch); 
 
-		// Move the cursor using the arrow keys.
-		xy = readArrowKeys(ch, xy); 
-		
-		// Get, set and print the current view.
+		// Update and redraw.
 		getViewBounderies();
 		setView(&head, viewStart, view);
-		xy = updateCursor(cursor, xy); 
+		xy = updateCursor(cursor, xy, ch); 
 		printText(head, view, xy);
 	}
 
