@@ -1,5 +1,5 @@
 /*
-	Writen by: Oscar Bergström
+  	Writen by: Oscar Bergström
 	https://github.com/OSCARJFB
 
 	MIT License
@@ -22,14 +22,14 @@ static void curseMode(bool isCurse)
 	endwin();
 }
 
-static void printText(text *head, int32_t viewStart, bool drawArrowKeys, termxy xy)
+static void printText(text *head, int32_t viewStart, termxy xy)
 {
 	clear(); 
 
 	int32_t newLines = 0;
 	for(text *node = head; node != NULL; node = node->next)
 	{
-		newLines += node->ch == '\n' ? 1 : 0; 
+		newLines += node->ch == '\n' ? 1 : 0;
 		if(viewStart < newLines)
 		{
 			continue; 
@@ -38,12 +38,14 @@ static void printText(text *head, int32_t viewStart, bool drawArrowKeys, termxy 
 		mvwaddch(stdscr, node->y, node->x, node->ch); 
 	}
 
-	if(drawArrowKeys)
-	{
-		move(xy.y, xy.x);
-	}
+	move(xy.y, xy.x);
 
 	refresh(); 
+}
+
+static int32_t getViewBounderies(void)
+{
+	return 0;
 }
 
 static int32_t setView(text **head, int32_t viewStart, int32_t view)
@@ -54,7 +56,7 @@ static int32_t setView(text **head, int32_t viewStart, int32_t view)
 	}
 
 	int32_t newLines, newLinesInView, x, y; 
-      	newLines = newLinesInView = x = y = 0; 
+	newLines = newLinesInView = x = y = 0; 
 
 	for(text *node = *head; node != NULL; node = node->next)
 	{
@@ -90,59 +92,107 @@ static int32_t setView(text **head, int32_t viewStart, int32_t view)
 	return 1;
 }
 
-int64_t modifyText(text **head, int32_t ch, int64_t bufferSize, 
-		int64_t *id, termxy xy)
+static text *addText(text **head, text *cursor, int32_t ch, int64_t *bufferSize, int64_t id, termxy xy)
 {
 	if((ch >= ' ' && ch <= '~') || (ch == '\t' || ch == '\n'))
 	{
-		text *newNode = findMemorySlot(*head, *id, bufferSize, ch);
+		text *newNode = findMemorySlot(*head, id, *bufferSize, ch);
 		if(newNode == NULL)
 		{
-			bufferSize = allocateMoreNodes(head, bufferSize);
-			newNode = findMemorySlot(*head, *id, bufferSize, ch);
+			*bufferSize = allocateMoreNodes(head, *bufferSize);
+			newNode = findMemorySlot(*head, id, *bufferSize, ch);
 		}
-		
-		addNode(head, newNode, xy.x, xy.y);
-	}
-	else if(ch == KEY_BACKSPACE)
-	{
-		*id = deleteNode(head, xy.x, xy.y); 
+
+		cursor = addNode(head, newNode, xy.x, xy.y);
 	}
 
-	return bufferSize;
+	return cursor;
 }
 
-termxy moveCursor(int32_t ch, termxy xy, bool *drawArrowKeys)
+static text *deleteText(text **head, text* cursor, int32_t ch, int64_t *id, termxy xy)
 {
+	if(ch != KEY_BACKSPACE)
+	{
+		return cursor; 
+	}
+	return deleteNode(head, xy.x, xy.y, id); 
+}
+
+/**
+ * Read the arrow key and set cursor.
+ * If key is up or down we iterate until we find a newline.
+ * else f key left, right, we take one step prev or next.
+ */
+static text *readArrowKeys(text *head, text *cursor, int32_t ch)
+{
+	if(head == NULL)
+	{
+		return NULL; 
+	}
+		
 	switch(ch)
 	{
 		case KEY_UP:
-			--xy.y;
+			 
+			for(bool isOnNewLine = false; cursor->prev != NULL && !isOnNewLine; cursor = cursor->prev)
+			{
+				if(cursor->ch == '\n')
+				{
+					isOnNewLine = true; 
+				}
+			}
 			break;
 		case KEY_DOWN:
-			++xy.y;
+			for(bool isOnNewLine = false; cursor->next != NULL && !isOnNewLine; cursor = cursor->next)
+			{
+				if(cursor->ch == '\n')
+				{
+					isOnNewLine = true;
+				}
+			}
 			break; 
 		case KEY_LEFT:
-			--xy.x;
+			if(cursor->next != NULL)
+			{
+				cursor = cursor->prev->ch != '\n' ? cursor->prev : cursor;
+		       	}
 			break;
 		case KEY_RIGHT:
-			++xy.x;
+			if(cursor->next != NULL)
+			{
+				cursor = cursor->next->ch != '\n' ? cursor->next : cursor;
+		       	}	
 			break; 
-		default:
-			*drawArrowKeys = false; 
-			return xy; 
-
 	}
-	
-	*drawArrowKeys = true;  
+
+	return cursor; 
+}
+
+
+/**
+ * Read the cursor node and update the cursor coordinates accordingly.
+ */
+static termxy updateCursor(text *cursor, termxy xy, int32_t ch)
+{
+	if(cursor == NULL)
+	{
+		xy.x = 0;
+		xy.y = 0; 
+	}
+	else
+	{
+		xy.x = ch == '\n' ? 0 : cursor->x + 1;  
+		xy.y = ch == '\n' ? cursor->y + 1 : cursor->y;  
+	}
+
 	return xy; 
 }
 
 void edit(text *head, int64_t bufferSize)
 {
 	curseMode(true); 
-	
-	bool drawArrowKeys = false; 
+
+	text *cursor = NULL; 
 	int32_t viewStart = 0, view = getmaxy(stdscr);
 	int64_t id = 0; 
 	termxy xy = {0, 0};
@@ -150,10 +200,17 @@ void edit(text *head, int64_t bufferSize)
 	for(int32_t ch = 0; ch != EOF; ch = getch())
 	{
 		getyx(stdscr, xy.y, xy.x); 
-		bufferSize = modifyText(&head, ch, bufferSize, &id, xy);
-		xy = moveCursor(ch, xy, &drawArrowKeys); 
+
+		// Read user Interaction.  
+		cursor = addText(&head, cursor, ch, &bufferSize, id, xy);
+		cursor = deleteText(&head, cursor, ch, &id, xy); 
+		cursor = readArrowKeys(head, cursor, ch); 
+
+		// Update and redraw.
+		getViewBounderies();
 		setView(&head, viewStart, view);
-		printText(head, view, drawArrowKeys, xy);
+		xy = updateCursor(cursor, xy, ch); 
+		printText(head, view, xy);
 	}
 
 	curseMode(false); 
