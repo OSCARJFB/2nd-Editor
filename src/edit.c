@@ -217,5 +217,7 @@ void edit(text *head, int64_t bufferSize)
 		printText(head, view, xy);
 	}
 
-	curseMode(false); 
+	curseMode(false);
+
+	deallocateNodes(head);
 }	
