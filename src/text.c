@@ -195,8 +195,8 @@ text *allocateNodesFromBuffer(int8_t *buffer, int64_t bufferSize)
  * This function will release the entire block of memory,
  * which in turn completely free all nodes, since they are bound to the same allocation.
  */
-void deallocateNodes(text *head)
+void deallocateNodes(text **head)
 {
-	free(head); 
-	head = NULL; 
+	free(*head); 
+	*head = NULL; 
 }
