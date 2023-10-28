@@ -121,7 +121,7 @@ static text *deleteText(text **head, text* cursor, int32_t ch, int64_t *id, term
 /**
  * Read the arrow key and set cursor.
  * If key is up or down we iterate until we find a newline.
- * else f key left, right, we take one step prev or next.
+ * else if key left, right, we take one step prev or next.
  */
 static text *readArrowKeys(text *head, text *cursor, int32_t ch)
 {
@@ -129,7 +129,7 @@ static text *readArrowKeys(text *head, text *cursor, int32_t ch)
 	{
 		return NULL; 
 	}
-		
+	
 	switch(ch)
 	{
 		case KEY_UP:
@@ -152,16 +152,20 @@ static text *readArrowKeys(text *head, text *cursor, int32_t ch)
 			}
 			break; 
 		case KEY_LEFT:
-			if(cursor->next != NULL)
+			if(cursor != NULL && cursor->prev != NULL)
 			{
 				cursor = cursor->prev->ch != '\n' ? cursor->prev : cursor;
+				break;
 		       	}
+			cursor = NULL;
 			break;
 		case KEY_RIGHT:
-			if(cursor->next != NULL)
+			if(cursor != NULL && cursor->next != NULL)
 			{
 				cursor = cursor->next->ch != '\n' ? cursor->next : cursor;
-		       	}	
+				break;
+		       	}
+			cursor = head;	
 			break; 
 	}
 
