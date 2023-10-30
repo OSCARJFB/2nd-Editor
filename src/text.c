@@ -73,7 +73,7 @@ text *addNode(text **head, text *newNode, int32_t x, int32_t y)
  */
 text *deleteNode(text **head, int32_t x, int32_t y, int64_t *id)
 {
-	if(x == 0 && y == 0)
+	if(*head == NULL || (x == 0 && y == 0))
 	{
 		return NULL; 
 	}
@@ -90,10 +90,13 @@ text *deleteNode(text **head, int32_t x, int32_t y, int64_t *id)
 		node->prev->next = node->next;
 		node->next->prev = node->prev->next;	
 	}
-	else if(node->prev == NULL)
+	else if(node->prev == NULL && node == *head)
 	{
-		node->next->prev = NULL;	
-	}
+		if(node->next == NULL)
+		{
+			deallocateNodes(head); 
+		}
+	}	
 
 	node->isInUse = false; 
 	*id = node->id; 

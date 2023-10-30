@@ -22,10 +22,20 @@ static void curseMode(bool isCurse)
 	endwin();
 }
 
+
+/**
+ * This function prints all characters, once within terminal view range. 
+ */
 static void printText(text *head, int32_t viewStart, termxy xy)
 {
-	clear(); 
+	clear();
 
+	if(head == NULL)
+	{
+		return;
+	}
+	
+	// Loop each item in the list, start printing to terminal once inside the view range.
 	int32_t newLines = 0;
 	for(text *node = head; node != NULL; node = node->next)
 	{
@@ -48,11 +58,11 @@ static int32_t getViewBounderies(void)
 	return 0;
 }
 
-static int32_t setView(text **head, int32_t viewStart, int32_t view)
+static void setView(text **head, int32_t viewStart, int32_t view)
 {
 	if(*head == NULL)
 	{
-		return 1;
+		return;
 	}
 
 	int32_t newLines, newLinesInView, x, y; 
@@ -88,11 +98,10 @@ static int32_t setView(text **head, int32_t viewStart, int32_t view)
 			break;
 		}
 	}
-
-	return 1;
 }
 
-static text *addText(text **head, text *cursor, int32_t ch, int64_t *bufferSize, int64_t id, termxy xy)
+static text *addText(text **head, text *cursor, int32_t ch, 
+		int64_t *bufferSize, int64_t id, termxy xy)
 {
 	if((ch >= ' ' && ch <= '~') || (ch == '\t' || ch == '\n'))
 	{
@@ -109,7 +118,8 @@ static text *addText(text **head, text *cursor, int32_t ch, int64_t *bufferSize,
 	return cursor;
 }
 
-static text *deleteText(text **head, text* cursor, int32_t ch, int64_t *id, termxy xy)
+static text *deleteText(text **head, text* cursor, int32_t ch, 
+		int64_t *id, termxy xy)
 {
 	if(ch != KEY_BACKSPACE)
 	{
@@ -219,5 +229,5 @@ void edit(text *head, int64_t bufferSize)
 
 	curseMode(false);
 
-	deallocateNodes(head);
+	deallocateNodes(&head);
 }	
