@@ -22,10 +22,20 @@ static void curseMode(bool isCurse)
 	endwin();
 }
 
+
+/**
+ * This function prints all characters, once within terminal view range. 
+ */
 static void printText(text *head, int32_t viewStart, termxy xy)
 {
-	clear(); 
+	clear();
 
+	if(head == NULL)
+	{
+		return;
+	}
+	
+	// Loop each item in the list, start printing to terminal once inside the view range.
 	int32_t newLines = 0;
 	for(text *node = head; node != NULL; node = node->next)
 	{
@@ -48,11 +58,11 @@ static int32_t getViewBounderies(void)
 	return 0;
 }
 
-static int32_t setView(text **head, int32_t viewStart, int32_t view)
+static void setView(text **head, int32_t viewStart, int32_t view)
 {
 	if(*head == NULL)
 	{
-		return 1;
+		return;
 	}
 
 	int32_t newLines, newLinesInView, x, y; 
@@ -88,11 +98,10 @@ static int32_t setView(text **head, int32_t viewStart, int32_t view)
 			break;
 		}
 	}
-
-	return 1;
 }
 
-static text *addText(text **head, text *cursor, int32_t ch, int64_t *bufferSize, int64_t id, termxy xy)
+static text *addText(text **head, text *cursor, int32_t ch, 
+		int64_t *bufferSize, int64_t id, termxy xy)
 {
 	if((ch >= ' ' && ch <= '~') || (ch == '\t' || ch == '\n'))
 	{
@@ -109,7 +118,8 @@ static text *addText(text **head, text *cursor, int32_t ch, int64_t *bufferSize,
 	return cursor;
 }
 
-static text *deleteText(text **head, text* cursor, int32_t ch, int64_t *id, termxy xy)
+static text *deleteText(text **head, text* cursor, int32_t ch, 
+		int64_t *id, termxy xy)
 {
 	if(ch != KEY_BACKSPACE)
 	{
@@ -183,12 +193,17 @@ static termxy updateCursor(text *cursor, termxy xy, int32_t ch)
 		xy.x = 0;
 		xy.y = 0; 
 	}
-	else
+	else if(ch != KEY_BACKSPACE)
 	{
 		xy.x = ch == '\n' ? 0 : cursor->x + 1;  
-		xy.y = ch == '\n' ? cursor->y + 1 : cursor->y;  
+		xy.y = ch == '\n' ? cursor->y + 1 : cursor->y;
 	}
-
+	else
+	{
+		xy.x = cursor->ch != '\n' ? cursor->x + 1 : 0; 
+		xy.y = cursor->ch != '\n' ? cursor->y : cursor->y + 1;
+	}	
+	
 	return xy; 
 }
 
@@ -219,5 +234,5 @@ void edit(text *head, int64_t bufferSize)
 
 	curseMode(false);
 
-	deallocateNodes(head);
+	deallocateNodes(&head);
 }	

@@ -61,7 +61,6 @@ text *addNode(text **head, text *newNode, int32_t x, int32_t y)
 		newNode->next = node->next; 
 		newNode->prev = node;
 		node->next = newNode; 
-
 	}
 
 	return newNode; 
@@ -73,7 +72,7 @@ text *addNode(text **head, text *newNode, int32_t x, int32_t y)
  */
 text *deleteNode(text **head, int32_t x, int32_t y, int64_t *id)
 {
-	if(x == 0 && y == 0)
+	if(*head == NULL || (x == 0 && y == 0))
 	{
 		return NULL; 
 	}
@@ -83,17 +82,26 @@ text *deleteNode(text **head, int32_t x, int32_t y, int64_t *id)
 	
 	if(node->next == NULL && node->prev != NULL)
 	{
-	 	node->prev->next = NULL; 
+	 	newNode->next = NULL; 
 	}
 	else if(node->next != NULL && node->prev != NULL)
 	{
-		node->prev->next = node->next;
-		node->next->prev = node->prev->next;	
+		newNode->next = node->next;
+	        node->next->prev = newNode; 	
 	}
-	else if(node->prev == NULL)
+	else if(node->prev == NULL && node == *head)
 	{
-		node->next->prev = NULL;	
-	}
+		if(node->next == NULL)
+		{
+			deallocateNodes(head); 
+			*id = 0; 
+			return NULL; 
+		}
+		else
+		{
+			
+		}
+	}	
 
 	node->isInUse = false; 
 	*id = node->id; 
@@ -134,6 +142,10 @@ text *findMemorySlot(text *head, int64_t id, int64_t bufferSize, int32_t ch)
  */
 int64_t allocateMoreNodes(text **head, int64_t bufferSize)
 {
+	if(*head == NULL)
+	{
+		bufferSize = 0;  
+	}
 	const uint32_t expand = 10;
 	*head = *head != NULL ? realloc(*head, (bufferSize + expand) * sizeof(text)) : malloc(expand * sizeof(text));
 	if(head == NULL)
