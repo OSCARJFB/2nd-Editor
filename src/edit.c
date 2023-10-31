@@ -193,12 +193,17 @@ static termxy updateCursor(text *cursor, termxy xy, int32_t ch)
 		xy.x = 0;
 		xy.y = 0; 
 	}
-	else
+	else if(ch != KEY_BACKSPACE)
 	{
 		xy.x = ch == '\n' ? 0 : cursor->x + 1;  
-		xy.y = ch == '\n' ? cursor->y + 1 : cursor->y;  
+		xy.y = ch == '\n' ? cursor->y + 1 : cursor->y;
 	}
-
+	else
+	{
+		xy.x = cursor->ch != '\n' ? cursor->x + 1 : 0; 
+		xy.y = cursor->ch != '\n' ? cursor->y : cursor->y + 1;
+	}	
+	
 	return xy; 
 }
 
