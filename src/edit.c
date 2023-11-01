@@ -142,23 +142,26 @@ static text *readArrowKeys(text *head, text *cursor, int32_t ch)
 	
 	switch(ch)
 	{
-		case KEY_UP:
-			 
-			for(bool isOnNewLine = false; cursor->prev != NULL && !isOnNewLine; cursor = cursor->prev)
+		case KEY_UP: 
+			while(cursor->prev != NULL)
 			{
 				if(cursor->ch == '\n')
 				{
-					isOnNewLine = true; 
+					cursor = cursor->prev;
+					break;
 				}
+				cursor = cursor->prev;
 			}
 			break;
 		case KEY_DOWN:
-			for(bool isOnNewLine = false; cursor->next != NULL && !isOnNewLine; cursor = cursor->next)
+			while(cursor->next != NULL)
 			{
 				if(cursor->ch == '\n')
 				{
-					isOnNewLine = true;
+					cursor = cursor->next;
+					break;
 				}
+				cursor = cursor->next;
 			}
 			break; 
 		case KEY_LEFT:
@@ -193,16 +196,28 @@ static termxy updateCursor(text *cursor, termxy xy, int32_t ch)
 		xy.x = 0;
 		xy.y = 0; 
 	}
-	else if(ch != KEY_BACKSPACE)
+	else if(ch == KEY_BACKSPACE)
+	{
+		xy.x = cursor->ch != '\n' ? cursor->x + 1 : 0; 
+		xy.y = cursor->ch != '\n' ? cursor->y : cursor->y + 1;
+	}
+	else if(ch == KEY_UP)
+	{
+	 	xy.x = cursor->ch != '\n' ? cursor->x + 1 : 0;
+		xy.y = cursor->ch != '\n' ? cursor->y : cursor->y + 1;
+	}
+	else if(ch == KEY_DOWN)
+	{
+		xy.x = cursor->ch != '\n' ? cursor->x + 1 : 0;
+		xy.y = cursor->ch != '\n' ? cursor->y : cursor->y + 1;
+	}
+	else
 	{
 		xy.x = ch == '\n' ? 0 : cursor->x + 1;  
 		xy.y = ch == '\n' ? cursor->y + 1 : cursor->y;
 	}
-	else
-	{
-		xy.x = cursor->ch != '\n' ? cursor->x + 1 : 0; 
-		xy.y = cursor->ch != '\n' ? cursor->y : cursor->y + 1;
-	}	
+
+		
 	
 	return xy; 
 }
