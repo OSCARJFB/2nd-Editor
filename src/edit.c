@@ -128,6 +128,75 @@ static text *deleteText(text **head, text* cursor, int32_t ch,
 	return deleteNode(head, xy.x, xy.y, id); 
 }
 
+static text *getKeyUp(text *cursor)
+{
+	for(; cursor->prev != NULL; cursor = cursor->prev)
+	{
+		if(cursor->ch == '\n')
+		{
+			cursor = cursor->prev;
+			break;
+		}
+	}
+
+	return cursor; 
+}
+
+static text *getKeyDown(text *cursor)
+{
+	if(cursor->next != NULL && cursor->next->next != NULL 
+			&& cursor->next->ch == '\n' && cursor->next->next->ch == '\n')
+	{
+		cursor = cursor->next;
+		return cursor; 
+	}
+
+	for(; cursor->next != NULL; cursor = cursor->next)
+	{
+		if(cursor->ch == '\n')
+		{
+			for(cursor = cursor->next; cursor->next != NULL; cursor = cursor->next)
+			{	
+				if(cursor->next->ch == '\n')
+				{
+					break; 
+				}
+			}
+			break; 
+		}
+	}
+
+	return cursor; 
+}
+
+static text *getKeyLeft(text *cursor)
+{
+	if(cursor != NULL && cursor->prev != NULL)
+	{
+		cursor = cursor->prev->ch != '\n' ? cursor->prev : cursor;
+	}
+	else
+	{		
+		cursor = NULL;
+	}
+
+	return cursor; 
+}
+
+static text *getKeyRight(text *cursor, text *head)
+{
+	if(cursor != NULL && cursor->next != NULL)
+	{
+		cursor = cursor->next->ch != '\n' ? cursor->next : cursor;
+	}
+	else
+	{		
+		cursor = head;	
+	}
+
+	return cursor; 
+}
+
 /**
  * Read the arrow key and set cursor.
  * If key is up or down we iterate until we find a newline.
@@ -143,42 +212,16 @@ static text *readArrowKeys(text *head, text *cursor, int32_t ch)
 	switch(ch)
 	{
 		case KEY_UP: 
-			while(cursor->prev != NULL)
-			{
-				if(cursor->ch == '\n')
-				{
-					cursor = cursor->prev;
-					break;
-				}
-				cursor = cursor->prev;
-			}
+			cursor = getKeyUp(cursor); 		
 			break;
 		case KEY_DOWN:
-			while(cursor->next != NULL)
-			{
-				if(cursor->ch == '\n')
-				{
-					cursor = cursor->next;
-					break;
-				}
-				cursor = cursor->next;
-			}
+			cursor = getKeyDown(cursor);
 			break; 
 		case KEY_LEFT:
-			if(cursor != NULL && cursor->prev != NULL)
-			{
-				cursor = cursor->prev->ch != '\n' ? cursor->prev : cursor;
-				break;
-		       	}
-			cursor = NULL;
+			cursor = getKeyLeft(cursor); 
 			break;
 		case KEY_RIGHT:
-			if(cursor != NULL && cursor->next != NULL)
-			{
-				cursor = cursor->next->ch != '\n' ? cursor->next : cursor;
-				break;
-		       	}
-			cursor = head;	
+			cursor = getKeyRight(cursor, head);
 			break; 
 	}
 
