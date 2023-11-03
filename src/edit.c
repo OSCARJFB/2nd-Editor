@@ -241,27 +241,62 @@ static termxy updateCursor(text *cursor, termxy xy, int32_t ch)
 	}
 	else if(ch == KEY_BACKSPACE)
 	{
-		xy.x = cursor->ch != '\n' ? cursor->x + 1 : 0; 
-		xy.y = cursor->ch != '\n' ? cursor->y : cursor->y + 1;
+		switch(cursor->ch)
+		{
+			case '\n':
+				xy.x = cursor->x + 1; 
+				xy.y = cursor->y + 1; 
+				break;
+			case '\t':
+				xy.x = cursor->x + 8; 
+				xy.y = cursor->y;
+				break;
+			default:
+				xy.x = cursor->x + 1; 
+				xy.y = cursor->y;
+				break;
+
+		}
 	}
-	else if(ch == KEY_UP)
+	else if(ch == KEY_UP || ch == KEY_DOWN)
 	{
-	 	xy.x = cursor->ch != '\n' ? cursor->x + 1 : 0;
-		xy.y = cursor->ch != '\n' ? cursor->y : cursor->y + 1;
-	}
-	else if(ch == KEY_DOWN)
-	{
-		xy.x = cursor->ch != '\n' ? cursor->x + 1 : 0;
-		xy.y = cursor->ch != '\n' ? cursor->y : cursor->y + 1;
+		switch(cursor->ch)
+		{
+			case '\n':
+				xy.x = 0; 
+				xy.y = cursor->y + 1; 
+				break;
+			case '\t':
+				xy.x = cursor->x + 8; 
+				xy.y = cursor->y;
+				break;
+			default:
+				xy.x = cursor->x + 1; 
+				xy.y = cursor->y;
+				break;
+
+		}
 	}
 	else
 	{
-		xy.x = ch == '\n' ? 0 : cursor->x + 1;  
-		xy.y = ch == '\n' ? cursor->y + 1 : cursor->y;
-	}
+		switch(cursor->ch)
+		{
+			case '\n':
+				xy.x = 0; 
+				xy.y = cursor->y + 1; 
+				break;
+			case '\t':
+				xy.x = cursor->x + 8;
+			        xy.y = cursor->y; 	
+				break;
+			default:
+				xy.x = cursor->x + 1;
+			        xy.y = cursor->y;
+				break;
 
+		}
+	}
 		
-	
 	return xy; 
 }
 
