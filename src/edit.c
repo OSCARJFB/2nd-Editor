@@ -169,9 +169,12 @@ static text *getKeyDown(text *cursor)
 	return cursor; 
 }
 
-static text *getKeyLeft(text *cursor, text *head)
+static text *getKeyLeft(text *cursor)
 {
-	cursor = cursor->prev != NULL ? cursor->prev : head; 
+	if(cursor != NULL && cursor->prev != NULL)
+	{
+		cursor = cursor->prev; 
+	}
 	return cursor; 
 }
 
@@ -207,7 +210,7 @@ static text *readArrowKeys(text *head, text *cursor, int32_t ch)
 			cursor = getKeyDown(cursor);
 			break; 
 		case KEY_LEFT:
-			cursor = getKeyLeft(cursor, head); 
+			cursor = getKeyLeft(cursor); 
 			break;
 		case KEY_RIGHT:
 			cursor = getKeyRight(cursor);
@@ -233,7 +236,7 @@ static termxy updateCursor(text *cursor, termxy xy, int32_t ch)
 		switch(cursor->ch)
 		{
 			case '\n':
-				xy.x = cursor->x + 1; 
+				xy.x = 0; 
 				xy.y = cursor->y + 1; 
 				break;
 			case '\t':
