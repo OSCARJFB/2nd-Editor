@@ -99,7 +99,19 @@ text *deleteNode(text **head, int32_t x, int32_t y, int64_t *id)
 		}
 		else
 		{
-			
+			node = node->next;
+		        (*head)->ch = node->next->ch; 
+			if((*head)->next->next != NULL)
+			{
+				(*head)->next = node->next->next;
+				node->next->next->prev = (*head); 
+			}
+			else 
+			{
+				(*head)->next = NULL; 
+			}
+
+			newNode = *head; 
 		}
 	}	
 
