@@ -173,26 +173,23 @@ static text *getKeyLeft(text *cursor)
 {
 	if(cursor != NULL && cursor->prev != NULL)
 	{
-		cursor = cursor->prev->ch != '\n' ? cursor->prev : cursor;
+		cursor = cursor->prev; 
 	}
 	else
-	{		
-		cursor = NULL;
+	{
+		cursor = NULL; 
 	}
 
 	return cursor; 
 }
 
-static text *getKeyRight(text *cursor, text *head)
+static text *getKeyRight(text *cursor)
 {
 	if(cursor != NULL && cursor->next != NULL)
 	{
-		cursor = cursor->next->ch != '\n' ? cursor->next : cursor;
+		cursor = cursor->next; 
 	}
-	else
-	{		
-		cursor = head;	
-	}
+	
 
 	return cursor; 
 }
@@ -221,7 +218,7 @@ static text *readArrowKeys(text *head, text *cursor, int32_t ch)
 			cursor = getKeyLeft(cursor); 
 			break;
 		case KEY_RIGHT:
-			cursor = getKeyRight(cursor, head);
+			cursor = getKeyRight(cursor);
 			break; 
 	}
 
@@ -240,25 +237,6 @@ static termxy updateCursor(text *cursor, termxy xy, int32_t ch)
 		xy.y = 0; 
 	}
 	else if(ch == KEY_BACKSPACE)
-	{
-		switch(cursor->ch)
-		{
-			case '\n':
-				xy.x = cursor->x + 1; 
-				xy.y = cursor->y + 1; 
-				break;
-			case '\t':
-				xy.x = cursor->x + 8; 
-				xy.y = cursor->y;
-				break;
-			default:
-				xy.x = cursor->x + 1; 
-				xy.y = cursor->y;
-				break;
-
-		}
-	}
-	else if(ch == KEY_UP || ch == KEY_DOWN)
 	{
 		switch(cursor->ch)
 		{

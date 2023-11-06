@@ -94,13 +94,25 @@ text *deleteNode(text **head, int32_t x, int32_t y, int64_t *id)
 		if(node->next == NULL)
 		{
 			deallocateNodes(head); 
-			*id = 0; 
-			return NULL; 
+			*id = 0;
+		        return NULL; 	
 		}
 		else
 		{
-			
+			node = node->next; 				        
+			(*head)->ch = node->ch; 
+			if(node->next != NULL)
+			{
+				(*head)->next = node->next;
+				node->next->prev = (*head); 
+			}
+			else 
+			{
+				(*head)->next = NULL; 
+			}
 		}
+
+		newNode = NULL; 
 	}	
 
 	node->isInUse = false; 
@@ -148,7 +160,7 @@ int64_t allocateMoreNodes(text **head, int64_t bufferSize)
 	}
 	const uint32_t expand = 10;
 	*head = *head != NULL ? realloc(*head, (bufferSize + expand) * sizeof(text)) : malloc(expand * sizeof(text));
-	if(head == NULL)
+	if(*head == NULL)
 	{
 		exit(EXIT_FAILURE);
 	}

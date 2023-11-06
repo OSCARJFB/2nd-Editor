@@ -1,0 +1,2 @@
+- When using left arrow key, cursor doesn't get placed at the beginning of the text once reaching the head node.
+- Deletion of head node or second node doesn't work correctly : result is a segfault.
