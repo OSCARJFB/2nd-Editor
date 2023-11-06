@@ -175,6 +175,11 @@ static text *getKeyLeft(text *cursor)
 	{
 		cursor = cursor->prev; 
 	}
+	else
+	{
+		cursor = NULL; 
+	}
+
 	return cursor; 
 }
 
@@ -224,9 +229,9 @@ static text *readArrowKeys(text *head, text *cursor, int32_t ch)
 /**
  * Read the cursor node and update the cursor coordinates accordingly.
  */
-static termxy updateCursor(text *cursor, text *head, termxy xy, int32_t ch)
+static termxy updateCursor(text *cursor, termxy xy, int32_t ch)
 {
-	if(cursor == NULL || (cursor == head && head->next != NULL))
+	if(cursor == NULL)
 	{
 		xy.x = 0;
 		xy.y = 0; 
@@ -294,7 +299,7 @@ void edit(text *head, int64_t bufferSize)
 		// Update and redraw.
 		getViewBounderies();
 		setView(&head, viewStart, view);
-		xy = updateCursor(cursor, head, xy, ch); 
+		xy = updateCursor(cursor, xy, ch); 
 		printText(head, view, xy);
 	}
 
