@@ -11,18 +11,22 @@
 
 static text *getNode(text *node, int32_t x, int32_t y)
 {
-	for(; node->next != NULL; node = node->next)
+	for(; node != NULL; node = node->next)
 	{
 		if(node->x == x && node->y == y)
 		{
 			node = node->prev != NULL ? node->prev : node; 
 			break;
 		}
+
+		if(node->next == NULL)
+		{
+			break;
+		}
 	}
 
 	return node; 
 }
-
 
 /** 
  * Add a new node to a doubly linked list. 
@@ -72,12 +76,12 @@ text *addNode(text **head, text *newNode, int32_t x, int32_t y)
  */
 text *deleteNode(text **head, int32_t x, int32_t y, int64_t *id)
 {
-	if(*head == NULL || (x == 0 && y == 0))
+	if(*head == NULL || (x == 0 && y == 0))				// Nothing to delete. 
 	{
 		return NULL; 
 	}
 
-	text *node = getNode(*head, x, y); 
+	text *node = getNode(*head, x, y);
 	text *newNode = node->prev;
 	
 	if(node->next == NULL && node->prev != NULL)
@@ -99,17 +103,8 @@ text *deleteNode(text **head, int32_t x, int32_t y, int64_t *id)
 		}
 		else
 		{
-			node = node->next; 				        
-			(*head)->ch = node->ch; 
-			if(node->next != NULL)
-			{
-				(*head)->next = node->next;
-				node->next->prev = (*head); 
-			}
-			else 
-			{
-				(*head)->next = NULL; 
-			}
+			(*head)->ch = node->next->ch; 
+			(*head)->next = NULL;
 		}
 
 		newNode = NULL; 
@@ -117,7 +112,6 @@ text *deleteNode(text **head, int32_t x, int32_t y, int64_t *id)
 
 	node->isInUse = false; 
 	*id = node->id; 
-
 	return newNode; 
 }
 
