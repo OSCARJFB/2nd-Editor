@@ -47,11 +47,19 @@ text *addNode(text **head, text *newNode, int32_t x, int32_t y)
 		(*head)->ch = newNode->ch; 
 		newNode->ch = ch;
 		
-		(*head)->next->prev = newNode;
-	        newNode->next = (*head)->next; 
+		if((*head)->next != NULL)
+		{
+			(*head)->next->prev = newNode;
+	        	newNode->next = (*head)->next; 
 
-		(*head)->next = newNode; 
-		newNode->prev = (*head);
+			(*head)->next = newNode; 
+			newNode->prev = (*head);
+		}
+		else
+		{
+			newNode->prev = *head; 
+			(*head)->next = newNode; 
+		}
 	        return *head; 	
 	}
 	else if(node->next == NULL) 		// At the end of the list.
@@ -103,8 +111,9 @@ text *deleteNode(text **head, int32_t x, int32_t y, int64_t *id)
 		}
 		else
 		{
-			(*head)->ch = node->next->ch; 
-			(*head)->next = NULL;
+			(*head)->ch = node->next->ch;
+			node = node->next;
+			(*head)->next = (*head)->next->next != NULL ? (*head)->next->next : NULL;
 		}
 
 		newNode = NULL; 
