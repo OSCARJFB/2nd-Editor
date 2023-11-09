@@ -7,10 +7,10 @@
 */
 
 #include <stdint.h>
-#include "file.h"
+#include "file.hpp"
 
 int main(int argc, char **argv)
-{	
+{		
 	startApp((int32_t)argc, (int8_t **)argv);
 	return 0;
 }

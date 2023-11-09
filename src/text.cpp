@@ -6,20 +6,19 @@
 	Copyright (c) 2023 Oscar Bergström
 */
 
-#include <stdlib.h>
-#include "text.h"
+#include "text.hpp"
 
-static text *getNode(text *node, int32_t x, int32_t y)
+text *text::getNode(text *node, int32_t x, int32_t y)
 {
-	for(; node != NULL; node = node->next)
+	for(; node != nullptr; node = node->next)
 	{
 		if(node->x == x && node->y == y)
 		{
-			node = node->prev != NULL ? node->prev : node; 
+			node = node->prev != nullptr ? node->prev : node; 
 			break;
 		}
 
-		if(node->next == NULL)
+		if(node->next == nullptr)
 		{
 			break;
 		}
@@ -33,7 +32,7 @@ static text *getNode(text *node, int32_t x, int32_t y)
  * Check if the list is empty, then create the list. 
  * If not check if the node should be added at the end, middle or head(new head) of the list. 
  */
-text *addNode(text **head, text *newNode, int32_t x, int32_t y)
+text *text::addNode(text **head, text *newNode, int32_t x, int32_t y)
 {	
 	text *node = getNode(*head, x, y); 
 
@@ -47,7 +46,7 @@ text *addNode(text **head, text *newNode, int32_t x, int32_t y)
 		(*head)->ch = newNode->ch; 
 		newNode->ch = ch;
 		
-		if((*head)->next != NULL)
+		if((*head)->next != nullptr)
 		{
 			(*head)->next->prev = newNode;
 	        	newNode->next = (*head)->next; 
@@ -62,12 +61,12 @@ text *addNode(text **head, text *newNode, int32_t x, int32_t y)
 		}
 	        return *head; 	
 	}
-	else if(node->next == NULL) 		// At the end of the list.
+	else if(node->next == nullptr) 		// At the end of the list.
 	{
 		node->next = newNode;
 		newNode->prev = node;
 	}
-	else if(node->next != NULL)		// At the middle of the list.
+	else if(node->next != nullptr)		// At the middle of the list.
 	{
 		node->next->prev = newNode; 
 		newNode->next = node->next; 
@@ -82,56 +81,56 @@ text *addNode(text **head, text *newNode, int32_t x, int32_t y)
  * Unlinks a node in the list and return the id of the node.
  * This Id can be used to access the node if it should be reused. 
  */
-text *deleteNode(text **head, int32_t x, int32_t y, int64_t *id)
+text *text::deleteNode(text **head, int32_t x, int32_t y, int64_t &id)
 {
-	if(*head == NULL || (x == 0 && y == 0))				// Nothing to delete. 
+	if(*head == nullptr || (x == 0 && y == 0))				// Nothing to delete. 
 	{
-		return NULL; 
+		return nullptr; 
 	}
 
 	text *node = getNode(*head, x, y);
 	text *newNode = node->prev;
 	
-	if(node->next == NULL && node->prev != NULL)
+	if(node->next == nullptr && node->prev != nullptr)
 	{
-	 	newNode->next = NULL; 
+	 	newNode->next = nullptr; 
 	}
-	else if(node->next != NULL && node->prev != NULL)
+	else if(node->next != nullptr && node->prev != nullptr)
 	{
 		newNode->next = node->next;
 	        node->next->prev = newNode; 	
 	}
-	else if(node->prev == NULL && node == *head)
+	else if(node->prev == nullptr && node == *head)
 	{
-		if(node->next == NULL)
+		if(node->next == nullptr)
 		{
 			deallocateNodes(head); 
-			*id = 0;
-		        return NULL; 	
+			id = 0;
+		        return nullptr; 	
 		}
 		else
 		{
 			(*head)->ch = node->next->ch;
 			node = node->next;
-			(*head)->next = (*head)->next->next != NULL ? (*head)->next->next : NULL;
+			(*head)->next = (*head)->next->next != nullptr ? (*head)->next->next : nullptr;
 		}
 
-		newNode = NULL; 
+		newNode = nullptr; 
 	}	
 
 	node->isInUse = false; 
-	*id = node->id; 
+	id = node->id; 
 	return newNode; 
 }
 
 /**
  * Find the next free memory slot in the array of nodes.
  */
-text *findMemorySlot(text *head, int64_t id, int64_t bufferSize, int32_t ch)
+text *text::findMemorySlot(text *head, int64_t id, int64_t bufferSize, int32_t ch)
 {
-	if(bufferSize == 0 || head == NULL)
+	if(bufferSize == 0 || head == nullptr)
 	{
-		return NULL; 
+		return nullptr; 
 	}
 
 	text *node = head;
@@ -139,15 +138,15 @@ text *findMemorySlot(text *head, int64_t id, int64_t bufferSize, int32_t ch)
 	{
 		if(!node[i].isInUse)
 		{	
-			node[i].next = NULL; 
-			node[i].prev = NULL; 
+			node[i].next = nullptr; 
+			node[i].prev = nullptr; 
 			node[i].ch = ch;
 		       	node[i].isInUse = true;	
 			return &node[i]; 
 		}
 	}
 
-	return NULL; 
+	return nullptr; 
 }
 
 /**
@@ -155,15 +154,16 @@ text *findMemorySlot(text *head, int64_t id, int64_t bufferSize, int32_t ch)
  * Realloc according to the size of expand. 
  * Set the new nodes and return the new bufferSize.
  */
-int64_t allocateMoreNodes(text **head, int64_t bufferSize)
+int64_t text::allocateMoreNodes(text **head, int64_t bufferSize)
 {
-	if(*head == NULL)
+	if(*head == nullptr)
 	{
 		bufferSize = 0;  
 	}
 	const uint32_t expand = 10;
-	*head = *head != NULL ? realloc(*head, (bufferSize + expand) * sizeof(text)) : malloc(expand * sizeof(text));
-	if(*head == NULL)
+	*head = *head != nullptr ? (text*)std::realloc(*head, (bufferSize + expand) * sizeof(text)) 
+			      : (text*)std::malloc(expand * sizeof(text));
+	if(*head == nullptr)
 	{
 		exit(EXIT_FAILURE);
 	}
@@ -172,8 +172,8 @@ int64_t allocateMoreNodes(text **head, int64_t bufferSize)
 	for(int64_t i = bufferSize; i < bufferSize + expand; ++i)
 	{
 		node[i].id = i; 
-		node[i].next = NULL; 
-		node[i].prev = NULL; 
+		node[i].next = nullptr; 
+		node[i].prev = nullptr; 
 		node[i].isInUse = false; 
 	}
 
@@ -183,24 +183,24 @@ int64_t allocateMoreNodes(text **head, int64_t bufferSize)
 /**
  * Allocate and set nodes from a chunk of memory.
  */
-text *allocateNodesFromBuffer(int8_t *buffer, int64_t bufferSize)
+text *text::allocateNodesFromBuffer(int8_t *buffer, int64_t bufferSize)
 {
-	if(buffer == NULL || bufferSize == 0)
+	if(buffer == nullptr || bufferSize == 0)
 	{
-		return NULL; 
+		return nullptr; 
 	}
 
-        text *node = malloc(sizeof(text) * bufferSize);
+        text *node = (text*)malloc(sizeof(text) * bufferSize);
         
-	if(node == NULL)
+	if(node == nullptr)
         {
-                return NULL;
+                return nullptr;
         }
 	
 	// This is the head. 
 	node[0].id = 0; 
-        node[0].next = NULL;
-        node[0].prev = NULL;
+        node[0].next = nullptr;
+        node[0].prev = nullptr;
         node[0].ch = buffer[0];
 	node[0].isInUse = true; 
 	
@@ -209,7 +209,7 @@ text *allocateNodesFromBuffer(int8_t *buffer, int64_t bufferSize)
         {
                 node[i - 1].next = &node[i];
 		node[i].id = i; 
-                node[i].next = NULL;
+                node[i].next = nullptr;
                 node[i].prev = &node[i - 1];
                 node[i].ch = buffer[i];
 		node[i].isInUse = true; 
@@ -222,8 +222,8 @@ text *allocateNodesFromBuffer(int8_t *buffer, int64_t bufferSize)
  * This function will release the entire block of memory,
  * which in turn completely free all nodes, since they are bound to the same allocation.
  */
-void deallocateNodes(text **head)
+void text::deallocateNodes(text **head)
 {
 	free(*head); 
-	*head = NULL; 
+	*head = nullptr; 
 }
