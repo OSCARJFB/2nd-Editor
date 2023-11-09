@@ -6,19 +6,19 @@
 	Copyright (c) 2023 Oscar Bergström
 */
 
-#include "file.h"
+#include "file.hpp"
 
 static FILE *getFileFromArg(int32_t argc, int8_t **argv)
 {
 	if(argc < 2)
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	FILE *fp = fopen((char*)argv[1], "r");
-	if(fp == NULL)
+	if(fp == nullptr)
 	{
-		return NULL; 
+		return nullptr; 
 	}
 
 	return fp;
@@ -26,7 +26,7 @@ static FILE *getFileFromArg(int32_t argc, int8_t **argv)
 
 static int64_t getFileSize(FILE *fp)
 {
-	if(fp == NULL)
+	if(fp == nullptr)
 	{
 		return 0;
 	}
@@ -50,12 +50,12 @@ static int8_t *createBuffer(int64_t bufferSize, FILE *fp)
 {
 	if(bufferSize == 0)
 	{
-		return NULL; 
+		return nullptr; 
 	}
 
-	int8_t *buffer = malloc(bufferSize);
+	int8_t *buffer = (int8_t*)malloc(bufferSize);
 	
-	if(buffer == NULL)
+	if(buffer == nullptr)
 	{
 		exit(EXIT_FAILURE);
 	}
@@ -70,7 +70,6 @@ void startApp(int32_t argc, int8_t **argv)
 	FILE *fp = getFileFromArg((int32_t)argc, (int8_t **)argv);
 	int64_t bufferSize = getFileSize(fp);
 	int8_t *buffer = createBuffer(bufferSize, fp);
-	text *head = allocateNodesFromBuffer(buffer, bufferSize);
-	edit(head, bufferSize);
+	edit edit(buffer, bufferSize);
 }
 

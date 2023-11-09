@@ -4,12 +4,12 @@
 #	MIT License
 #	Copyright (c) 2023 Oscar Bergström
 
-cc = gcc
+cc = g++
 cflags = -Wall -Wextra -Werror -pedantic
 debugFlag = -g
 
 main:
-	$(cc) main.c file.c edit.c text.c $(cflags) -lncurses -o main.o
+	$(cc) main.cpp file.cpp edit.cpp text.cpp $(cflags) -lncurses -o main.o
 	
 debug:
-	$(cc) main.c file.c edit.c text.c $(debugFlag) -lncurses -o main.o
+	$(cc) main.cpp file.cpp edit.cpp text.cpp $(debugFlag) -lncurses -o main.o
