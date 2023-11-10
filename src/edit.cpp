@@ -52,9 +52,18 @@ void edit::printText(text *head, int32_t viewStart, termxy xy)
 	refresh();
 }
 
-int32_t edit::getViewBounderies(void)
+void edit::setViewBounderies(int32_t &view, int32_t &viewStart, text *cursor, int32_t ch)
 {
-	return 0;
+	if (cursor != nullptr && cursor->y < view)
+	{
+		return;
+	}
+	
+	if(ch == '\n' || (ch == KEY_DOWN && getNode(cursor)))
+	{
+		view = getmaxy(stdscr);
+		++viewStart;
+	}
 }
 
 void edit::setView(text **head, int32_t viewStart, int32_t view)
@@ -309,7 +318,7 @@ edit::edit(int8_t *buffer, int64_t bufferSize)
 		cursor = readArrowKeys(head, cursor, ch);
 
 		// Update and redraw.
-		getViewBounderies();
+		setViewBounderies(view, viewStart, cursor, ch);
 		setView(&head, viewStart, view);
 		xy = updateCursor(cursor, xy, ch);
 		printText(head, view, xy);
