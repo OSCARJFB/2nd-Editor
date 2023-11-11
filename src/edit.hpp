@@ -25,11 +25,11 @@ private:
 	void curseMode(bool isCurse);
 	void printText(text *head, int32_t viewStart, termxy xy);
 	void setView(text **head, int32_t viewStart, int32_t view);
-	int32_t getViewBounderies(void);
+	void setViewBounderies(int32_t &view, int32_t &viewStart, text *cursor, int32_t ch);
 	text *addText(text **head, text *cursor, int32_t ch, int64_t &bufferSize, int64_t id, termxy xy);
 	text *deleteText(text **head, text *cursor, int32_t ch, int64_t &id, termxy xy);
 	text *getKeyUp(text *cursor);
-	text *getKeyDown(text *cursor);
+	text *getKeyDown(text *cursor, text *head);
 	text *getKeyLeft(text *cursor);
 	text *getKeyRight(text *cursor, text *head);
 	text *readArrowKeys(text *head, text *cursor, int32_t ch);

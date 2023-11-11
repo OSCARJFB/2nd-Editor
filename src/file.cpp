@@ -14,7 +14,7 @@ static FILE *getFileFromArg(int32_t argc, int8_t **argv)
 	{
 		return nullptr;
 	}
-
+	
 	FILE *fp = fopen((char*)argv[1], "r");
 	if(fp == nullptr)
 	{
@@ -53,15 +53,14 @@ static int8_t *createBuffer(int64_t bufferSize, FILE *fp)
 		return nullptr; 
 	}
 
-	int8_t *buffer = (int8_t*)malloc(bufferSize);
-	
-	if(buffer == nullptr)
-	{
-		exit(EXIT_FAILURE);
-	}
+	int8_t *buffer = new int8_t[bufferSize];
 
-	rewind(fp);
-	while(fread(buffer, bufferSize, 1, fp) > 0){}; 
+	std::rewind(fp);
+	while(std::fread(buffer, bufferSize, 1, fp) > 0){}; 
+	
+	fclose(fp);
+	fp = nullptr; 
+	
 	return buffer;	
 }
 

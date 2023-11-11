@@ -20,6 +20,7 @@ public:
 	int64_t id;
 
 protected:
+	bool getNode(text *node);
 	text *getNode(text *node, int32_t x, int32_t y);
 	text *findMemorySlot(text *head, int64_t id, int64_t bufferSize, int32_t ch);
 	text *addNode(text **head, text *newNode, int32_t x, int32_t y);

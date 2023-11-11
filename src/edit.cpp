@@ -52,9 +52,18 @@ void edit::printText(text *head, int32_t viewStart, termxy xy)
 	refresh();
 }
 
-int32_t edit::getViewBounderies(void)
+void edit::setViewBounderies(int32_t &view, int32_t &viewStart, text *cursor, int32_t ch)
 {
-	return 0;
+	if (cursor != nullptr && cursor->y < view)
+	{
+		return;
+	}
+	
+	if(ch == '\n' || (ch == KEY_DOWN && getNode(cursor)))
+	{
+		view = getmaxy(stdscr);
+		++viewStart;
+	}
 }
 
 void edit::setView(text **head, int32_t viewStart, int32_t view)
@@ -132,6 +141,11 @@ text *edit::deleteText(text **head, text *cursor, int32_t ch,
  */
 text *edit::getKeyUp(text *cursor)
 {
+	if(cursor == nullptr || cursor->y == 0)
+	{
+		return cursor;
+	}
+
 	for (; cursor->prev != nullptr; cursor = cursor->prev)
 	{
 		if (cursor->ch == '\n')
@@ -140,6 +154,12 @@ text *edit::getKeyUp(text *cursor)
 			break;
 		}
 	}
+	
+	// This was the head node and newline character.
+	if(cursor->ch == '\n' && cursor->prev == nullptr)
+	{
+		cursor = nullptr; 
+	}
 
 	return cursor;
 }
@@ -147,8 +167,13 @@ text *edit::getKeyUp(text *cursor)
 /**
  * Will set the new cursor position by updating the cursor pointer.
  */
-text *edit::getKeyDown(text *cursor)
+text *edit::getKeyDown(text *cursor, text *head)
 {
+	if(cursor == nullptr)
+	{
+		cursor = head; 
+	}
+
 	if (cursor->next != nullptr && cursor->next->next != nullptr &&
 		cursor->next->ch == '\n' && cursor->next->next->ch == '\n')
 	{
@@ -226,7 +251,7 @@ text *edit::readArrowKeys(text *head, text *cursor, int32_t ch)
 		cursor = getKeyUp(cursor);
 		break;
 	case KEY_DOWN:
-		cursor = getKeyDown(cursor);
+		cursor = getKeyDown(cursor, head);
 		break;
 	case KEY_LEFT:
 		cursor = getKeyLeft(cursor);
@@ -309,7 +334,7 @@ edit::edit(int8_t *buffer, int64_t bufferSize)
 		cursor = readArrowKeys(head, cursor, ch);
 
 		// Update and redraw.
-		getViewBounderies();
+		setViewBounderies(view, viewStart, cursor, ch);
 		setView(&head, viewStart, view);
 		xy = updateCursor(cursor, xy, ch);
 		printText(head, view, xy);
