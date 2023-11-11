@@ -29,7 +29,7 @@ private:
 	text *addText(text **head, text *cursor, int32_t ch, int64_t &bufferSize, int64_t id, termxy xy);
 	text *deleteText(text **head, text *cursor, int32_t ch, int64_t &id, termxy xy);
 	text *getKeyUp(text *cursor);
-	text *getKeyDown(text *cursor);
+	text *getKeyDown(text *cursor, text *head);
 	text *getKeyLeft(text *cursor);
 	text *getKeyRight(text *cursor, text *head);
 	text *readArrowKeys(text *head, text *cursor, int32_t ch);

@@ -141,6 +141,11 @@ text *edit::deleteText(text **head, text *cursor, int32_t ch,
  */
 text *edit::getKeyUp(text *cursor)
 {
+	if(cursor == nullptr || cursor->y == 0)
+	{
+		return cursor;
+	}
+
 	for (; cursor->prev != nullptr; cursor = cursor->prev)
 	{
 		if (cursor->ch == '\n')
@@ -149,6 +154,12 @@ text *edit::getKeyUp(text *cursor)
 			break;
 		}
 	}
+	
+	// This was the head node and newline character.
+	if(cursor->ch == '\n' && cursor->prev == nullptr)
+	{
+		cursor = nullptr; 
+	}
 
 	return cursor;
 }
@@ -156,8 +167,13 @@ text *edit::getKeyUp(text *cursor)
 /**
  * Will set the new cursor position by updating the cursor pointer.
  */
-text *edit::getKeyDown(text *cursor)
+text *edit::getKeyDown(text *cursor, text *head)
 {
+	if(cursor == nullptr)
+	{
+		cursor = head; 
+	}
+
 	if (cursor->next != nullptr && cursor->next->next != nullptr &&
 		cursor->next->ch == '\n' && cursor->next->next->ch == '\n')
 	{
@@ -235,7 +251,7 @@ text *edit::readArrowKeys(text *head, text *cursor, int32_t ch)
 		cursor = getKeyUp(cursor);
 		break;
 	case KEY_DOWN:
-		cursor = getKeyDown(cursor);
+		cursor = getKeyDown(cursor, head);
 		break;
 	case KEY_LEFT:
 		cursor = getKeyLeft(cursor);

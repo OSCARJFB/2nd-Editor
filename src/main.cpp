@@ -6,7 +6,7 @@
 	Copyright (c) 2023 Oscar Bergström
 */
 
-#include <stdint.h>
+#include <cstdint>
 #include "file.hpp"
 
 int main(int argc, char **argv)
