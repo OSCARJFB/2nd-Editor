@@ -10,15 +10,15 @@
 
 static FILE *getFileFromArg(int32_t argc, int8_t **argv)
 {
-	if(argc < 2)
+	if (argc < 2)
 	{
 		return nullptr;
 	}
-	
-	FILE *fp = fopen((char*)argv[1], "r");
-	if(fp == nullptr)
+
+	FILE *fp = fopen((char *)argv[1], "r");
+	if (fp == nullptr)
 	{
-		return nullptr; 
+		return nullptr;
 	}
 
 	return fp;
@@ -26,42 +26,44 @@ static FILE *getFileFromArg(int32_t argc, int8_t **argv)
 
 static int64_t getFileSize(FILE *fp)
 {
-	if(fp == nullptr)
+	if (fp == nullptr)
 	{
 		return 0;
 	}
 
 	int64_t size = 0;
-        if(fseek(fp, 0, SEEK_END) == -1)
-	{
-		return -1; 
-	}	
-
-	size = ftell(fp);
-	if(size == -1)
+	if (fseek(fp, 0, SEEK_END) == -1)
 	{
 		return -1;
 	}
 
-	return size; 
+	size = ftell(fp);
+	if (size == -1)
+	{
+		return -1;
+	}
+
+	return size;
 }
 
 static int8_t *createBuffer(int64_t bufferSize, FILE *fp)
 {
-	if(bufferSize == 0)
+	if (bufferSize == 0 || bufferSize == -1)
 	{
-		return nullptr; 
+		return nullptr;
 	}
 
 	int8_t *buffer = new int8_t[bufferSize];
 
 	std::rewind(fp);
-	while(std::fread(buffer, bufferSize, 1, fp) > 0){}; 
-	
+	while (std::fread(buffer, bufferSize, 1, fp) > 0)
+	{
+	};
+
 	fclose(fp);
-	fp = nullptr; 
-	
-	return buffer;	
+	fp = nullptr;
+
+	return buffer;
 }
 
 void startApp(int32_t argc, int8_t **argv)
@@ -71,4 +73,3 @@ void startApp(int32_t argc, int8_t **argv)
 	int8_t *buffer = createBuffer(bufferSize, fp);
 	edit edit(buffer, bufferSize);
 }
-

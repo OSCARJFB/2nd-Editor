@@ -141,9 +141,15 @@ text *edit::deleteText(text **head, text *cursor, int32_t ch,
  */
 text *edit::getKeyUp(text *cursor)
 {
-	if(cursor == nullptr || cursor->y == 0)
+	// beginning of the list or end of terminal view.
+	if(cursor == nullptr || (cursor->y == 0 && cursor->ch != '\n'))
 	{
-		return cursor;
+			return cursor;
+	}
+
+	if(cursor->prev == nullptr && cursor->ch == '\n')
+	{
+		return nullptr; 
 	}
 
 	for (; cursor->prev != nullptr; cursor = cursor->prev)
@@ -153,12 +159,6 @@ text *edit::getKeyUp(text *cursor)
 			cursor = cursor->prev;
 			break;
 		}
-	}
-	
-	// This was the head node and newline character.
-	if(cursor->ch == '\n' && cursor->prev == nullptr)
-	{
-		cursor = nullptr; 
 	}
 
 	return cursor;
