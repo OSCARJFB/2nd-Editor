@@ -54,7 +54,7 @@ void edit::printText(text *head, int32_t viewStart, termxy xy)
 
 void edit::setViewBounderies(int32_t &view, int32_t &viewStart, text *cursor, int32_t ch)
 {
-	if (cursor != nullptr && cursor->y < view)
+	if (cursor == nullptr || cursor->y < view)
 	{
 		return;
 	}
@@ -141,9 +141,15 @@ text *edit::deleteText(text **head, text *cursor, int32_t ch,
  */
 text *edit::getKeyUp(text *cursor)
 {
-	if(cursor == nullptr || cursor->y == 0)
+	// beginning of the list or end of terminal view.
+	if(cursor == nullptr || (cursor->y == 0 && cursor->ch != '\n'))
 	{
-		return cursor;
+			return cursor;
+	}
+
+	if(cursor->prev == nullptr && cursor->ch == '\n')
+	{
+		return nullptr; 
 	}
 
 	for (; cursor->prev != nullptr; cursor = cursor->prev)
@@ -153,12 +159,6 @@ text *edit::getKeyUp(text *cursor)
 			cursor = cursor->prev;
 			break;
 		}
-	}
-	
-	// This was the head node and newline character.
-	if(cursor->ch == '\n' && cursor->prev == nullptr)
-	{
-		cursor = nullptr; 
 	}
 
 	return cursor;
@@ -172,6 +172,10 @@ text *edit::getKeyDown(text *cursor, text *head)
 	if(cursor == nullptr)
 	{
 		cursor = head; 
+		if(head == nullptr)
+		{
+			return nullptr; 
+		}
 	}
 
 	if (cursor->next != nullptr && cursor->next->next != nullptr &&
