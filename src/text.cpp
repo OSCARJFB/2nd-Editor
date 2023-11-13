@@ -8,9 +8,6 @@
 
 #include "text.hpp"
 
-/**
- * Check if any node remaining in the list is on a newline.
- */
 bool text::getNode(text *node)
 {
 	int32_t y = node->y;
@@ -27,9 +24,6 @@ bool text::getNode(text *node)
 	return nodeFound;
 }
 
-/**
- * Get a node depandant on the x and y coordinate.
- */
 text *text::getNode(text *node, int32_t x, int32_t y)
 {
 	for (; node != nullptr; node = node->next)
@@ -49,11 +43,6 @@ text *text::getNode(text *node, int32_t x, int32_t y)
 	return node;
 }
 
-/**
- * Add a new node to a doubly linked list.
- * Check if the list is empty, then create the list.
- * If not check if the node should be added at the end, middle or head(new head) of the list.
- */
 text *text::addNode(text **head, text *newNode, int32_t x, int32_t y)
 {
 	text *node = getNode(*head, x, y);
@@ -99,10 +88,6 @@ text *text::addNode(text **head, text *newNode, int32_t x, int32_t y)
 	return newNode;
 }
 
-/**
- * Unlinks a node in the list and return the id of the node.
- * This Id can be used to access the node if it should be reused.
- */
 text *text::deleteNode(text **head, int32_t x, int32_t y, int64_t &id)
 {
 	if (*head == nullptr || (x == 0 && y == 0)) // Nothing to delete.
@@ -146,9 +131,6 @@ text *text::deleteNode(text **head, int32_t x, int32_t y, int64_t &id)
 	return newNode;
 }
 
-/**
- * Find the next free memory slot in the array of nodes.
- */
 text *text::findMemorySlot(text *head, int64_t id, int64_t bufferSize, int32_t ch)
 {
 	if (bufferSize == 0 || head == nullptr)
@@ -173,11 +155,6 @@ text *text::findMemorySlot(text *head, int64_t id, int64_t bufferSize, int32_t c
 	return nullptr;
 }
 
-/**
- * Increase the amount of allocated nodes.
- * Realloc according to the size of expand.
- * Set the new nodes and return the new bufferSize.
- */
 int64_t text::allocateMoreNodes(text **head, int64_t bufferSize)
 {
 	if (*head == nullptr)
@@ -206,9 +183,6 @@ int64_t text::allocateMoreNodes(text **head, int64_t bufferSize)
 	return bufferSize + expand;
 }
 
-/**
- * Allocate and set nodes from a chunk of memory.
- */
 text *text::allocateNodesFromBuffer(int8_t *buffer, int64_t bufferSize)
 {
 	if (buffer == nullptr || bufferSize == 0)
@@ -246,10 +220,6 @@ text *text::allocateNodesFromBuffer(int8_t *buffer, int64_t bufferSize)
 	return node;
 }
 
-/**
- * This function will release the entire block of memory,
- * which in turn completely free all nodes, since they are bound to the same allocation.
- */
 void text::deallocateNodes(text **head)
 {
 	free(*head);

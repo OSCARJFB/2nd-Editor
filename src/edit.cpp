@@ -22,9 +22,6 @@ void edit::curseMode(bool isCurse)
 	endwin();
 }
 
-/**
- * This function prints all characters, once within terminal view range.
- */
 void edit::printText(text *head, int32_t viewStart, termxy xy)
 {
 	clear();
@@ -136,9 +133,6 @@ text *edit::deleteText(text **head, text *cursor, int32_t ch,
 	return deleteNode(head, xy.x, xy.y, id);
 }
 
-/**
- * Will set the new cursor position by updating the cursor pointer.
- */
 text *edit::getKeyUp(text *cursor)
 {
 	// beginning of the list or end of terminal view.
@@ -164,9 +158,6 @@ text *edit::getKeyUp(text *cursor)
 	return cursor;
 }
 
-/**
- * Will set the new cursor position by updating the cursor pointer.
- */
 text *edit::getKeyDown(text *cursor, text *head)
 {
 	if(cursor == nullptr)
@@ -203,9 +194,6 @@ text *edit::getKeyDown(text *cursor, text *head)
 	return cursor;
 }
 
-/**
- * Will set the new cursor position by updating the cursor pointer.
- */
 text *edit::getKeyLeft(text *cursor)
 {
 	if (cursor != nullptr && cursor->prev != nullptr)
@@ -220,16 +208,13 @@ text *edit::getKeyLeft(text *cursor)
 	return cursor;
 }
 
-/**
- * Will set the new cursor position by updating the cursor pointer.
- */
 text *edit::getKeyRight(text *cursor, text *head)
 {
 	if (cursor != nullptr && cursor->next != nullptr)
 	{
 		cursor = cursor->next;
 	}
-	else
+	else if(cursor == nullptr)
 	{
 		cursor = head;
 	}
@@ -237,11 +222,6 @@ text *edit::getKeyRight(text *cursor, text *head)
 	return cursor;
 }
 
-/**
- * Read the arrow key and set cursor.
- * If key is up or down we iterate until we find a newline.
- * else if key left, right, we take one step prev or next.
- */
 text *edit::readArrowKeys(text *head, text *cursor, int32_t ch)
 {
 	if (head == nullptr)
@@ -268,9 +248,6 @@ text *edit::readArrowKeys(text *head, text *cursor, int32_t ch)
 	return cursor;
 }
 
-/**
- * Read the cursor node and update the cursor coordinates accordingly.
- */
 edit::termxy edit::updateCursor(text *cursor, termxy xy, int32_t ch)
 {
 	if (cursor == nullptr)
