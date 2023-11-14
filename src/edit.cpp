@@ -22,7 +22,7 @@ void edit::curseMode(bool isCurse)
 	endwin();
 }
 
-void edit::printText(text *head, int32_t viewStart, termxy xy)
+void edit::printText(text *head, int32_t viewStart, int32_t view, termxy xy)
 {
 	clear();
 
@@ -32,13 +32,19 @@ void edit::printText(text *head, int32_t viewStart, termxy xy)
 	}
 
 	// Loop each item in the list, start printing to terminal once inside the view range.
-	int32_t newLines = 0;
+	int32_t newLines = 0, newLinesInView = 0;
 	for (text *node = head; node != nullptr; node = node->next)
 	{
 		newLines += node->ch == '\n' ? 1 : 0;
-		if (viewStart < newLines)
+		if (viewStart > newLines)
 		{
 			continue;
+		}
+
+		newLinesInView += node->ch == '\n' ? 1 : 0;
+		if(newLinesInView > view)
+		{
+			break;
 		}
 
 		mvwaddch(stdscr, node->y, node->x, node->ch);
@@ -49,18 +55,71 @@ void edit::printText(text *head, int32_t viewStart, termxy xy)
 	refresh();
 }
 
-void edit::setViewBounderies(int32_t &view, int32_t &viewStart, text *cursor, int32_t ch)
+text *edit::getViewStartNode(text *cursor)
 {
-	if (cursor == nullptr || cursor->y < view)
+	if(cursor == nullptr)
 	{
-		return;
+		return cursor; 
+	}
+
+	text *node = cursor->prev;
+	for(; node != nullptr; node = node->prev)
+	{
+		if(node->y == 0 && node->x == 0)
+		{
+			break;
+		}
 	}
 	
-	if(ch == '\n' || (ch == KEY_DOWN && getNode(cursor)))
+	return node; 
+}
+
+int32_t edit::getNewLinesInView(text *node, int32_t view)
+{
+	int32_t lines = 0; 
+	for(;node != nullptr; node = node->next)
 	{
-		view = getmaxy(stdscr);
+		lines += node->ch == '\n' ? 1 : 0; 
+		if(lines == view)
+		{
+			break;
+		}
+	}
+
+	return lines;
+}
+
+bool edit::getNode(text *node)
+{
+	int32_t y = node->y;
+	bool nodeFound = false;
+	for (; node != nullptr; node = node->next)
+	{
+		if (node->y > y)
+		{
+			nodeFound = true;
+			break;
+		}
+	}
+
+	return nodeFound;
+}
+
+int32_t edit::setViewStart(int32_t view, int32_t &viewStart, text *cursor, int32_t ch)
+{
+	text* startNode = getViewStartNode(cursor); 
+	int32_t lines = getNewLinesInView(startNode, view); 
+	if(lines != view)
+	{
+		return viewStart;
+	}
+
+	if(ch == '\n')
+	{
 		++viewStart;
 	}
+
+	return viewStart; 
 }
 
 void edit::setView(text **head, int32_t viewStart, int32_t view)
@@ -72,9 +131,9 @@ void edit::setView(text **head, int32_t viewStart, int32_t view)
 
 	int32_t newLines, newLinesInView, x, y;
 	newLines = newLinesInView = x = y = 0;
-
 	for (text *node = *head; node != nullptr; node = node->next)
 	{
+		node->x = node->y = -1; // outside of view.
 		if (newLines >= viewStart)
 		{
 			newLinesInView += node->ch == '\n' ? 1 : 0;
@@ -248,30 +307,12 @@ text *edit::readArrowKeys(text *head, text *cursor, int32_t ch)
 	return cursor;
 }
 
-edit::termxy edit::updateCursor(text *cursor, termxy xy, int32_t ch)
+edit::termxy edit::updateCursor(text *cursor, termxy xy)
 {
 	if (cursor == nullptr)
 	{
 		xy.x = 0;
 		xy.y = 0;
-	}
-	else if (ch == KEY_BACKSPACE)
-	{
-		switch (cursor->ch)
-		{
-		case '\n':
-			xy.x = 0;
-			xy.y = cursor->y + 1;
-			break;
-		case '\t':
-			xy.x = cursor->x + 8;
-			xy.y = cursor->y;
-			break;
-		default:
-			xy.x = cursor->x + 1;
-			xy.y = cursor->y;
-			break;
-		}
 	}
 	else
 	{
@@ -301,7 +342,7 @@ edit::edit(int8_t *buffer, int64_t bufferSize)
 	curseMode(true);
 
 	text *head = allocateNodesFromBuffer(buffer, bufferSize), *cursor = nullptr;
-	int32_t viewStart = 0, view = getmaxy(stdscr);
+	int32_t viewStart = 0, view = 3; // getmaxy(stdscr);
 	int64_t id = 0;
 	termxy xy = {0, 0};
 
@@ -315,10 +356,10 @@ edit::edit(int8_t *buffer, int64_t bufferSize)
 		cursor = readArrowKeys(head, cursor, ch);
 
 		// Update and redraw.
-		setViewBounderies(view, viewStart, cursor, ch);
+		viewStart = setViewStart(view, viewStart, cursor, ch);
 		setView(&head, viewStart, view);
-		xy = updateCursor(cursor, xy, ch);
-		printText(head, view, xy);
+		xy = updateCursor(cursor, xy);
+		printText(head, viewStart, view, xy);
 	}
 
 	curseMode(false);
