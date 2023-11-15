@@ -42,7 +42,7 @@ void edit::printText(text *head, int32_t viewStart, int32_t view, termxy xy)
 		}
 
 		newLinesInView += node->ch == '\n' ? 1 : 0;
-		if(newLinesInView > view)
+		if (newLinesInView > view)
 		{
 			break;
 		}
@@ -57,30 +57,30 @@ void edit::printText(text *head, int32_t viewStart, int32_t view, termxy xy)
 
 text *edit::getViewStartNode(text *cursor)
 {
-	if(cursor == nullptr)
+	if (cursor == nullptr)
 	{
-		return cursor; 
+		return cursor;
 	}
 
 	text *node = cursor->prev;
-	for(; node != nullptr; node = node->prev)
+	for (; node != nullptr; node = node->prev)
 	{
-		if(node->y == 0 && node->x == 0)
+		if (node->y == 0 && node->x == 0)
 		{
 			break;
 		}
 	}
-	
-	return node; 
+
+	return node;
 }
 
 int32_t edit::getNewLinesInView(text *node, int32_t view)
 {
-	int32_t lines = 0; 
-	for(;node != nullptr; node = node->next)
+	int32_t lines = 0;
+	for (; node != nullptr; node = node->next)
 	{
-		lines += node->ch == '\n' ? 1 : 0; 
-		if(lines == view)
+		lines += node->ch == '\n' ? 1 : 0;
+		if (lines == view)
 		{
 			break;
 		}
@@ -107,19 +107,15 @@ bool edit::getNode(text *node)
 
 int32_t edit::setViewStart(int32_t view, int32_t &viewStart, text *cursor, int32_t ch)
 {
-	text* startNode = getViewStartNode(cursor); 
-	int32_t lines = getNewLinesInView(startNode, view); 
-	if(lines != view)
-	{
-		return viewStart;
-	}
+	text *startNode = getViewStartNode(cursor);
+	int32_t lines = getNewLinesInView(startNode, view);
 
-	if(ch == '\n')
+	if (ch == '\n' && lines == view)
 	{
 		++viewStart;
 	}
 
-	return viewStart; 
+	return viewStart;
 }
 
 void edit::setView(text **head, int32_t viewStart, int32_t view)
@@ -195,14 +191,14 @@ text *edit::deleteText(text **head, text *cursor, int32_t ch,
 text *edit::getKeyUp(text *cursor)
 {
 	// beginning of the list or end of terminal view.
-	if(cursor == nullptr || (cursor->y == 0 && cursor->ch != '\n'))
+	if (cursor == nullptr || (cursor->y == 0 && cursor->ch != '\n'))
 	{
-			return cursor;
+		return cursor;
 	}
 
-	if(cursor->prev == nullptr && cursor->ch == '\n')
+	if (cursor->prev == nullptr && cursor->ch == '\n')
 	{
-		return nullptr; 
+		return nullptr;
 	}
 
 	for (; cursor->prev != nullptr; cursor = cursor->prev)
@@ -219,12 +215,12 @@ text *edit::getKeyUp(text *cursor)
 
 text *edit::getKeyDown(text *cursor, text *head)
 {
-	if(cursor == nullptr)
+	if (cursor == nullptr)
 	{
-		cursor = head; 
-		if(head == nullptr)
+		cursor = head;
+		if (head == nullptr)
 		{
-			return nullptr; 
+			return nullptr;
 		}
 	}
 
@@ -273,7 +269,7 @@ text *edit::getKeyRight(text *cursor, text *head)
 	{
 		cursor = cursor->next;
 	}
-	else if(cursor == nullptr)
+	else if (cursor == nullptr)
 	{
 		cursor = head;
 	}

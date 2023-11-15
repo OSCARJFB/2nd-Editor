@@ -34,7 +34,7 @@ text *text::addNode(text **head, text *newNode, int32_t x, int32_t y)
 	{
 		return *head;
 	}
-	else if (x == 0 && y == 0) // At head node.
+	else if (x == 0 && y == 0 && node->prev == nullptr) // At head node.
 	{
 		int32_t ch = (*head)->ch;
 		(*head)->ch = newNode->ch;
@@ -198,8 +198,8 @@ text *text::allocateNodesFromBuffer(int8_t *buffer, int64_t bufferSize)
 		node[i].isInUse = true;
 	}
 
-	delete [] buffer;
-	buffer = nullptr; 
+	delete[] buffer;
+	buffer = nullptr;
 	return node;
 }
 
