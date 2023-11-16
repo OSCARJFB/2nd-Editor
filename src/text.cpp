@@ -8,22 +8,6 @@
 
 #include "text.hpp"
 
-bool text::getNode(text *node)
-{
-	int32_t y = node->y;
-	bool nodeFound = false;
-	for (; node != nullptr; node = node->next)
-	{
-		if (node->y > y)
-		{
-			nodeFound = true;
-			break;
-		}
-	}
-
-	return nodeFound;
-}
-
 text *text::getNode(text *node, int32_t x, int32_t y)
 {
 	for (; node != nullptr; node = node->next)
@@ -46,12 +30,11 @@ text *text::getNode(text *node, int32_t x, int32_t y)
 text *text::addNode(text **head, text *newNode, int32_t x, int32_t y)
 {
 	text *node = getNode(*head, x, y);
-
 	if (*head == newNode) // First node, head node.
 	{
 		return *head;
 	}
-	else if (x == 0 && y == 0) // At head node.
+	else if (x == 0 && y == 0 && node->prev == nullptr) // At head node.
 	{
 		int32_t ch = (*head)->ch;
 		(*head)->ch = newNode->ch;
@@ -215,8 +198,8 @@ text *text::allocateNodesFromBuffer(int8_t *buffer, int64_t bufferSize)
 		node[i].isInUse = true;
 	}
 
-	delete [] buffer;
-	buffer = nullptr; 
+	delete[] buffer;
+	buffer = nullptr;
 	return node;
 }
 
