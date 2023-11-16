@@ -105,12 +105,23 @@ bool edit::getNode(text *node)
 	return nodeFound;
 }
 
-int32_t edit::setViewStart(int32_t view, int32_t &viewStart, text *cursor, int32_t ch)
+int32_t edit::setViewStart(int32_t view, int32_t viewStart, text *head,
+						   text *cursor, int32_t ch, int32_t delch)
 {
-	text *startNode = getViewStartNode(cursor);
-	int32_t lines = getNewLinesInView(startNode, view);
+	if (head == nullptr)
+	{
+		return viewStart;
+	}
 
-	if (ch == '\n' && lines == view)
+	// When deleting a newline reduce viewStart.
+	if (ch == KEY_BACKSPACE && viewStart != 0 && delch == '\n')
+	{
+		--viewStart;
+	}
+
+	// If maximum number of lines in the view are reached increase viewStart.
+	text *startNode = cursor != nullptr ? getViewStartNode(cursor) : head;
+	if (ch == '\n' && view == getNewLinesInView(startNode, view))
 	{
 		++viewStart;
 	}
@@ -179,12 +190,20 @@ text *edit::addText(text **head, text *cursor, int32_t ch,
 }
 
 text *edit::deleteText(text **head, text *cursor, int32_t ch,
-					   int64_t &id, termxy xy)
+					   int32_t &delch, int64_t &id, termxy xy)
 {
 	if (ch != KEY_BACKSPACE)
 	{
 		return cursor;
 	}
+
+	// If head is not NULL return
+	if (head != nullptr)
+	{
+		// If the cursor is NULL deleted character is a newline (end of view).
+		delch = cursor != nullptr ? cursor->ch : '\n';
+	}
+
 	return deleteNode(head, xy.x, xy.y, id);
 }
 
@@ -338,7 +357,7 @@ edit::edit(int8_t *buffer, int64_t bufferSize)
 	curseMode(true);
 
 	text *head = allocateNodesFromBuffer(buffer, bufferSize), *cursor = nullptr;
-	int32_t viewStart = 0, view = 3; // getmaxy(stdscr);
+	int32_t viewStart = 0, view = getmaxy(stdscr), delch = 0;
 	int64_t id = 0;
 	termxy xy = {0, 0};
 
@@ -348,11 +367,11 @@ edit::edit(int8_t *buffer, int64_t bufferSize)
 
 		// Read user Interaction.
 		cursor = addText(&head, cursor, ch, bufferSize, id, xy);
-		cursor = deleteText(&head, cursor, ch, id, xy);
+		cursor = deleteText(&head, cursor, ch, delch, id, xy);
 		cursor = readArrowKeys(head, cursor, ch);
 
 		// Update and redraw.
-		viewStart = setViewStart(view, viewStart, cursor, ch);
+		viewStart = setViewStart(view, viewStart, head, cursor, ch, delch);
 		setView(&head, viewStart, view);
 		xy = updateCursor(cursor, xy);
 		printText(head, viewStart, view, xy);
