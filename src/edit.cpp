@@ -89,13 +89,17 @@ int32_t edit::getNewLinesInView(text *node, int32_t view)
 	return lines;
 }
 
-bool edit::getNode(text *node)
+bool edit::isNodeAtPrevLine(text *node)
 {
-	int32_t y = node->y;
-	bool nodeFound = false;
-	for (; node != nullptr; node = node->next)
+	if(node == nullptr)
 	{
-		if (node->y > y)
+		return true;
+	}
+
+	bool nodeFound = false;
+	for (; node != nullptr; node = node->prev)
+	{
+		if (node->y == -1)
 		{
 			nodeFound = true;
 			break;
@@ -103,6 +107,23 @@ bool edit::getNode(text *node)
 	}
 
 	return nodeFound;
+}
+
+bool edit::isNodeAtNextLine(text *node)
+{
+	if(node == nullptr)
+	{
+		return true;
+	}
+
+	if(node->next == nullptr || node->ch != '\n')
+	{
+		return false;
+	}
+
+
+
+	return true;
 }
 
 int32_t edit::setViewStart(int32_t view, int32_t viewStart, text *head,
@@ -113,17 +134,25 @@ int32_t edit::setViewStart(int32_t view, int32_t viewStart, text *head,
 		return viewStart;
 	}
 
-	// When deleting a newline reduce viewStart.
 	if (ch == KEY_BACKSPACE && viewStart != 0 && delch == '\n')
 	{
-		--viewStart;
+		return --viewStart;
 	}
 
-	// If maximum number of lines in the view are reached increase viewStart.
+	if(ch == KEY_UP && isNodeAtPrevLine(cursor) && cursor->y == 0)
+	{
+		return --viewStart;
+	}
+
+	if(ch == KEY_DOWN && isNodeAtNextLine(cursor) && cursor->y == view - 1)
+	{
+		return ++viewStart;
+	}
+
 	text *startNode = cursor != nullptr ? getViewStartNode(cursor) : head;
 	if (ch == '\n' && view == getNewLinesInView(startNode, view))
 	{
-		++viewStart;
+		return ++viewStart;
 	}
 
 	return viewStart;
