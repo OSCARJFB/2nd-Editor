@@ -121,8 +121,6 @@ bool edit::isNodeAtNextLine(text *node)
 		return false;
 	}
 
-
-
 	return true;
 }
 
@@ -165,12 +163,13 @@ void edit::setView(text **head, int32_t viewStart, int32_t view)
 		return;
 	}
 
-	int32_t newLines, newLinesInView, x, y;
-	newLines = newLinesInView = x = y = 0;
+	bool isViewSet = false;
+	int32_t newLines = 0, newLinesInView = 0, x = 0, y = 0;
+	
 	for (text *node = *head; node != nullptr; node = node->next)
 	{
 		node->x = node->y = -1; // outside of view.
-		if (newLines >= viewStart)
+		if (newLines >= viewStart && !isViewSet)
 		{
 			newLinesInView += node->ch == '\n' ? 1 : 0;
 			node->x = x;
@@ -192,10 +191,15 @@ void edit::setView(text **head, int32_t viewStart, int32_t view)
 			}
 		}
 
+		if(isViewSet && node->ch == '\n')
+		{
+			break;
+		}
+
 		newLines += node->ch == '\n' ? 1 : 0;
 		if (newLinesInView == view)
 		{
-			break;
+			isViewSet = true;
 		}
 	}
 }
