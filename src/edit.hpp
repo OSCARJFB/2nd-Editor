@@ -25,7 +25,8 @@ private:
 	void curseMode(bool isCurse);
 	void printText(text *head, int32_t viewStart, int32_t view, termxy xy);
 	void setView(text **head, int32_t viewStart, int32_t view);
-	bool getNode(text *node);
+	bool isNodeAtPrevLine(text *node);
+	bool isNodeAtNextLine(text *node);
 	int32_t setViewStart(int32_t view, int32_t viewStart, text *head, text *cursor, int32_t ch, int32_t delch);
 	int32_t getNewLinesInView(text *node, int32_t view);
 	text *addText(text **head, text *cursor, int32_t ch, int64_t &bufferSize, int64_t id, termxy xy);
