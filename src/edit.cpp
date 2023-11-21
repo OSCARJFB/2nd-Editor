@@ -91,7 +91,7 @@ int32_t edit::getNewLinesInView(text *node, int32_t view)
 
 bool edit::isNodeAtPrevLine(text *node)
 {
-	if(node == nullptr)
+	if (node == nullptr)
 	{
 		return true;
 	}
@@ -111,12 +111,12 @@ bool edit::isNodeAtPrevLine(text *node)
 
 bool edit::isNodeAtNextLine(text *node)
 {
-	if(node == nullptr)
+	if (node == nullptr)
 	{
 		return true;
 	}
 
-	if(node->next == nullptr || node->ch != '\n')
+	if (node->next == nullptr || node->ch != '\n')
 	{
 		return false;
 	}
@@ -137,12 +137,12 @@ int32_t edit::setViewStart(int32_t view, int32_t viewStart, text *head,
 		return --viewStart;
 	}
 
-	if(ch == KEY_UP && isNodeAtPrevLine(cursor) && cursor->y == 0)
+	if (ch == KEY_UP && isNodeAtPrevLine(cursor) && cursor->y == 0)
 	{
 		return --viewStart;
 	}
 
-	if(ch == KEY_DOWN && isNodeAtNextLine(cursor) && cursor->y == view - 1)
+	if (ch == KEY_DOWN && isNodeAtNextLine(cursor) && cursor->y == view - 1)
 	{
 		return ++viewStart;
 	}
@@ -165,7 +165,7 @@ void edit::setView(text **head, int32_t viewStart, int32_t view)
 
 	bool isViewSet = false;
 	int32_t newLines = 0, newLinesInView = 0, x = 0, y = 0;
-	
+
 	for (text *node = *head; node != nullptr; node = node->next)
 	{
 		node->x = node->y = -1; // outside of view.
@@ -191,7 +191,7 @@ void edit::setView(text **head, int32_t viewStart, int32_t view)
 			}
 		}
 
-		if(isViewSet && node->ch == '\n')
+		if (isViewSet && node->ch == '\n')
 		{
 			break;
 		}
@@ -205,7 +205,7 @@ void edit::setView(text **head, int32_t viewStart, int32_t view)
 }
 
 text *edit::addText(text **head, text *cursor, int32_t ch,
-					int64_t &bufferSize, int64_t id, termxy xy)
+					size_t &bufferSize, size_t id, termxy xy)
 {
 	if ((ch >= ' ' && ch <= '~') || (ch == '\t' || ch == '\n'))
 	{
@@ -223,7 +223,7 @@ text *edit::addText(text **head, text *cursor, int32_t ch,
 }
 
 text *edit::deleteText(text **head, text *cursor, int32_t ch,
-					   int32_t &delch, int64_t &id, termxy xy)
+					   int32_t &delch, size_t &id, termxy xy)
 {
 	if (ch != KEY_BACKSPACE)
 	{
@@ -384,14 +384,14 @@ edit::termxy edit::updateCursor(text *cursor, termxy xy)
 	return xy;
 }
 
-edit::edit(int8_t *buffer, int64_t bufferSize)
+edit::edit(std::string &buffer, size_t bufferSize)
 {
 
 	curseMode(true);
 
 	text *head = allocateNodesFromBuffer(buffer, bufferSize), *cursor = nullptr;
 	int32_t viewStart = 0, view = getmaxy(stdscr), delch = 0;
-	int64_t id = 0;
+	size_t id = 0;
 	termxy xy = {0, 0};
 
 	for (int32_t ch = 0; ch != EOF; ch = getch())
