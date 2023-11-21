@@ -8,68 +8,39 @@
 
 #include "file.hpp"
 
-static FILE *getFileFromArg(int32_t argc, int8_t **argv)
+static std::string getStringFromArgs(int32_t argc, int8_t **argv)
 {
 	if (argc < 2)
 	{
-		return nullptr;
+		return std::string();
 	}
 
-	FILE *fp = fopen((char *)argv[1], "r");
-	if (fp == nullptr)
-	{
-		return nullptr;
-	}
-
-	return fp;
+	return std::string((char *)argv[1]);
 }
 
-static int64_t getFileSize(FILE *fp)
+static std::string readFileAtPath(std::string &path)
 {
-	if (fp == nullptr)
+	if (path.empty())
 	{
-		return 0;
+		return std::string();
 	}
 
-	int64_t size = 0;
-	if (fseek(fp, 0, SEEK_END) == -1)
+	std::ifstream file;
+	file.open(path, std::ios::in);
+	if (!file.is_open())
 	{
-		return -1;
+		return std::string();
 	}
 
-	size = ftell(fp);
-	if (size == -1)
-	{
-		return -1;
-	}
+	std::string buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 
-	return size;
-}
-
-static int8_t *createBuffer(int64_t bufferSize, FILE *fp)
-{
-	if (bufferSize == 0 || bufferSize == -1)
-	{
-		return nullptr;
-	}
-
-	int8_t *buffer = new int8_t[bufferSize];
-
-	std::rewind(fp);
-	while (std::fread(buffer, bufferSize, 1, fp) > 0)
-	{
-	};
-
-	fclose(fp);
-	fp = nullptr;
-
+	file.close();
 	return buffer;
 }
 
 void startApp(int32_t argc, int8_t **argv)
 {
-	FILE *fp = getFileFromArg((int32_t)argc, (int8_t **)argv);
-	int64_t bufferSize = getFileSize(fp);
-	int8_t *buffer = createBuffer(bufferSize, fp);
-	edit edit(buffer, bufferSize);
+	std::string path = getStringFromArgs(argc, argv);
+	std::string buffer = readFileAtPath(path);
+	edit edit(buffer, buffer.size());
 }

@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include <ncurses.h>
+#include <string>
 #include <cstdint>
-#include <cstdlib>
+#include <ncurses.h>
 #include "text.hpp"
 
 class edit : text
@@ -29,8 +29,8 @@ private:
 	bool isNodeAtNextLine(text *node);
 	int32_t setViewStart(int32_t view, int32_t viewStart, text *head, text *cursor, int32_t ch, int32_t delch);
 	int32_t getNewLinesInView(text *node, int32_t view);
-	text *addText(text **head, text *cursor, int32_t ch, int64_t &bufferSize, int64_t id, termxy xy);
-	text *deleteText(text **head, text *cursor, int32_t ch, int32_t &delch, int64_t &id, termxy xy);
+	text *addText(text **head, text *cursor, int32_t ch, size_t &bufferSize, size_t id, termxy xy);
+	text *deleteText(text **head, text *cursor, int32_t ch, int32_t &delch, size_t &id, termxy xy);
 	text *getKeyUp(text *cursor);
 	text *getKeyDown(text *cursor, text *head);
 	text *getKeyLeft(text *cursor);
@@ -40,5 +40,5 @@ private:
 	termxy updateCursor(text *cursor, termxy xy);
 
 public:
-	edit(int8_t *buffer, int64_t bufferSize);
+	edit(std::string &buffer, size_t bufferSize);
 };
