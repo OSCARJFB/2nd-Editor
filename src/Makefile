@@ -6,6 +6,7 @@
 
 cc = g++
 cflags = -Wall -Wextra -Werror -pedantic
+cflags_release = -O3 -march=native -mtune=native -flto -fomit-frame-pointer
 debugFlag = -g
 
 main:
@@ -13,3 +14,6 @@ main:
 	
 debug:
 	$(cc) main.cpp file.cpp edit.cpp text.cpp $(debugFlag) -lncurses -o main.o
+
+release: 
+	$(cc) main.cpp file.cpp edit.cpp text.cpp $(cflags_release) -lncurses -o ob

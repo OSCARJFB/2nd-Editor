@@ -116,7 +116,7 @@ bool edit::isNodeAtNextLine(text *node)
 		return true;
 	}
 
-	if (node->next == nullptr || node->ch != '\n')
+	if (node->next == nullptr || node->next->ch != '\n')
 	{
 		return false;
 	}
@@ -132,7 +132,7 @@ int32_t edit::setViewStart(int32_t view, int32_t viewStart, text *head,
 		return viewStart;
 	}
 
-	if (ch == KEY_BACKSPACE && viewStart != 0 && delch == '\n')
+	else if (ch == KEY_BACKSPACE && viewStart != 0 && delch == '\n')
 	{
 		return --viewStart;
 	}
@@ -142,7 +142,7 @@ int32_t edit::setViewStart(int32_t view, int32_t viewStart, text *head,
 		return --viewStart;
 	}
 
-	if (ch == KEY_DOWN && isNodeAtNextLine(cursor) && cursor->y == view - 1)
+	if (ch == KEY_DOWN && isNodeAtNextLine(cursor) && cursor->y == -1)
 	{
 		return ++viewStart;
 	}
