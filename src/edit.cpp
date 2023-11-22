@@ -26,11 +26,6 @@ void edit::printText(text *head, int32_t viewStart, int32_t view, termxy xy)
 {
 	clear();
 
-	if (head == nullptr)
-	{
-		return;
-	}
-
 	// Loop each item in the list, start printing to terminal once inside the view range.
 	int32_t newLines = 0, newLinesInView = 0;
 	for (text *node = head; node != nullptr; node = node->next)
@@ -116,7 +111,7 @@ bool edit::isNodeAtNextLine(text *node)
 		return true;
 	}
 
-	if (node->next == nullptr || node->ch != '\n')
+	if (node->next == nullptr || node->next->ch != '\n')
 	{
 		return false;
 	}
@@ -132,7 +127,7 @@ int32_t edit::setViewStart(int32_t view, int32_t viewStart, text *head,
 		return viewStart;
 	}
 
-	if (ch == KEY_BACKSPACE && viewStart != 0 && delch == '\n')
+	else if (ch == KEY_BACKSPACE && viewStart != 0 && delch == '\n')
 	{
 		return --viewStart;
 	}
@@ -142,7 +137,7 @@ int32_t edit::setViewStart(int32_t view, int32_t viewStart, text *head,
 		return --viewStart;
 	}
 
-	if (ch == KEY_DOWN && isNodeAtNextLine(cursor) && cursor->y == view - 1)
+	if (ch == KEY_DOWN && isNodeAtNextLine(cursor) && cursor->y == -1)
 	{
 		return ++viewStart;
 	}
@@ -158,14 +153,8 @@ int32_t edit::setViewStart(int32_t view, int32_t viewStart, text *head,
 
 void edit::setView(text **head, int32_t viewStart, int32_t view)
 {
-	if (*head == nullptr)
-	{
-		return;
-	}
-
 	bool isViewSet = false;
 	int32_t newLines = 0, newLinesInView = 0, x = 0, y = 0;
-
 	for (text *node = *head; node != nullptr; node = node->next)
 	{
 		node->x = node->y = -1; // outside of view.
@@ -175,31 +164,24 @@ void edit::setView(text **head, int32_t viewStart, int32_t view)
 			node->x = x;
 			node->y = y;
 
-			if (node->ch == '\t')
-			{
-				x += 8;
-			}
-			else
-			{
-				++x;
-			}
-
+			x += node->ch == '\t' ? 8 : 1;
 			if (node->ch == '\n')
 			{
 				x = 0;
 				++y;
 			}
 		}
-
-		if (isViewSet && node->ch == '\n')
-		{
-			break;
-		}
-
+		
 		newLines += node->ch == '\n' ? 1 : 0;
 		if (newLinesInView == view)
 		{
 			isViewSet = true;
+			continue;
+		}
+
+		if(isViewSet && node->ch == '\n')
+		{
+			break; 
 		}
 	}
 }
@@ -390,7 +372,7 @@ edit::edit(std::string &buffer, size_t bufferSize)
 	curseMode(true);
 
 	text *head = allocateNodesFromBuffer(buffer, bufferSize), *cursor = nullptr;
-	int32_t viewStart = 0, view = getmaxy(stdscr), delch = 0;
+	int32_t viewStart = 0, view = 3, delch = 0;
 	size_t id = 0;
 	termxy xy = {0, 0};
 
