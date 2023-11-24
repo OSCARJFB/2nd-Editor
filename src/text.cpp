@@ -71,7 +71,7 @@ text *text::addNode(text **head, text *newNode, int32_t x, int32_t y)
 	return newNode;
 }
 
-text *text::deleteNode(text **head, int32_t x, int32_t y, size_t &id)
+text *text::deleteNode(text **head, int32_t x, int32_t y, uint32_t &id)
 {
 	if (*head == nullptr || (x == 0 && y == 0)) // Nothing to delete.
 	{
@@ -114,7 +114,7 @@ text *text::deleteNode(text **head, int32_t x, int32_t y, size_t &id)
 	return newNode;
 }
 
-text *text::findMemorySlot(text *head, size_t id, size_t bufferSize, int32_t ch)
+text *text::findMemorySlot(text *head, uint32_t id, uint32_t bufferSize, int32_t ch)
 {
 	if (bufferSize == 0 || head == nullptr)
 	{
@@ -123,7 +123,7 @@ text *text::findMemorySlot(text *head, size_t id, size_t bufferSize, int32_t ch)
 
 	// Use id to get quick access to a memory slot else continue looping.
 	text *node = head;
-	for (size_t i = id; i < bufferSize; ++i)
+	for (uint32_t i = id; i < bufferSize; ++i)
 	{
 		if (!node[i].isInUse)
 		{
@@ -138,14 +138,14 @@ text *text::findMemorySlot(text *head, size_t id, size_t bufferSize, int32_t ch)
 	return nullptr;
 }
 
-size_t text::allocateMoreNodes(text **head, size_t bufferSize)
+uint32_t text::allocateMoreNodes(text **head, uint32_t bufferSize)
 {
 	if (*head == nullptr)
 	{
 		bufferSize = 0;
 	}
 	// Allocate or reallocate memory of the text list.
-	const uint32_t expand = 10;
+	const int32_t expand = 100;
 	*head = *head != nullptr ? (text *)std::realloc(*head, (bufferSize + expand) * sizeof(text))
 							 : (text *)std::malloc(expand * sizeof(text));
 	if (*head == nullptr)
@@ -155,7 +155,7 @@ size_t text::allocateMoreNodes(text **head, size_t bufferSize)
 
 	// Set all newly allocated nodes.
 	text *node = *head;
-	for (size_t i = bufferSize; i < bufferSize + expand; ++i)
+	for (uint32_t i = bufferSize; i < bufferSize + expand; ++i)
 	{
 		node[i].id = i;
 		node[i].next = nullptr;
@@ -166,7 +166,7 @@ size_t text::allocateMoreNodes(text **head, size_t bufferSize)
 	return bufferSize + expand;
 }
 
-text *text::allocateNodesFromBuffer(std::string &buffer, size_t bufferSize)
+text *text::allocateNodesFromBuffer(std::string &buffer, uint32_t bufferSize)
 {
 	if (buffer.empty())
 	{
@@ -174,7 +174,6 @@ text *text::allocateNodesFromBuffer(std::string &buffer, size_t bufferSize)
 	}
 
 	text *node = (text *)malloc(sizeof(text) * bufferSize);
-
 	if (node == nullptr)
 	{
 		return nullptr;
@@ -188,7 +187,7 @@ text *text::allocateNodesFromBuffer(std::string &buffer, size_t bufferSize)
 	node[0].isInUse = true;
 
 	// Set the rest of the nodes.
-	for (size_t i = 1; i < bufferSize; ++i)
+	for (uint32_t i = 1; i < bufferSize; ++i)
 	{
 		node[i - 1].next = &node[i];
 		node[i].id = i;
