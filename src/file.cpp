@@ -43,5 +43,6 @@ void startApp(int32_t argc, int8_t **argv)
 	std::string path = getStringFromArgs(argc, argv);
 	std::string buffer = readFileAtPath(path);
 	uint32_t bufferSize = static_cast<uint32_t>(buffer.size());
-	edit edit(buffer, bufferSize);
+	edit e = edit(buffer, bufferSize);
+	e.run();  
 }
