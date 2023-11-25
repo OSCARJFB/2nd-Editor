@@ -101,12 +101,12 @@ bool edit::isNodeAtPrevLine(text *node)
 
 bool edit::isNodeAtNextLine(text *node)
 {
-	if (node != nullptr && node->next == nullptr)
+	if (node != nullptr)
 	{
 		return true;
 	}
 
-	if (node->next == nullptr || node->next->ch != '\n')
+	if (node->next != nullptr && node->next->ch != '\n')
 	{
 		return false;
 	}
@@ -363,12 +363,12 @@ edit::termxy edit::updateCursor(text *cursor, termxy xy)
 
 edit::edit(std::string &buffer, uint32_t bufferSize)
 {
+	curseMode(true);
+
 	text *head = allocateNodesFromBuffer(buffer, bufferSize), *cursor = nullptr;
-	int32_t viewStart = 0, view = getmaxy(stdscr), delch = 0;
+	int32_t viewStart = 0, view = 4, delch = 0;
 	uint32_t id = 0;
 	termxy xy = {0, 0};
-
-	curseMode(true);
 
 	for (int32_t ch = 0; ch != EOF; ch = getch())
 	{
@@ -385,6 +385,5 @@ edit::edit(std::string &buffer, uint32_t bufferSize)
 	}
 
 	curseMode(false);
-
 	deallocateNodes(&head);
 }
