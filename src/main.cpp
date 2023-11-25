@@ -11,6 +11,6 @@
 
 int main(int argc, char **argv)
 {
-	startApp((int32_t)argc, (int8_t **)argv);
+	startApp(static_cast<int32_t>(argc), static_cast<int8_t**>(static_cast<void*>(argv)));
 	return 0;
 }

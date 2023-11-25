@@ -86,11 +86,6 @@ int32_t edit::getNewLinesInView(text *node, int32_t view)
 
 bool edit::isNodeAtPrevLine(text *node)
 {
-	if (node == nullptr)
-	{
-		return true;
-	}
-
 	bool nodeFound = false;
 	for (; node != nullptr; node = node->prev)
 	{
@@ -106,12 +101,12 @@ bool edit::isNodeAtPrevLine(text *node)
 
 bool edit::isNodeAtNextLine(text *node)
 {
-	if (node == nullptr)
+	if (node != nullptr)
 	{
 		return true;
 	}
 
-	if (node->next == nullptr || node->next->ch != '\n')
+	if (node->next != nullptr && node->next->ch != '\n')
 	{
 		return false;
 	}
@@ -127,7 +122,7 @@ int32_t edit::setViewStart(int32_t view, int32_t viewStart, text *head,
 		return viewStart;
 	}
 
-	else if (ch == KEY_BACKSPACE && viewStart != 0 && delch == '\n')
+	if (ch == KEY_BACKSPACE && viewStart != 0 && delch == '\n')
 	{
 		return --viewStart;
 	}
@@ -171,7 +166,7 @@ void edit::setView(text **head, int32_t viewStart, int32_t view)
 				++y;
 			}
 		}
-		
+
 		newLines += node->ch == '\n' ? 1 : 0;
 		if (newLinesInView == view)
 		{
@@ -179,23 +174,24 @@ void edit::setView(text **head, int32_t viewStart, int32_t view)
 			continue;
 		}
 
-		if(isViewSet && node->ch == '\n')
+		if (isViewSet && node->ch == '\n')
 		{
-			break; 
+			break;
 		}
 	}
 }
 
 text *edit::addText(text **head, text *cursor, int32_t ch,
-					size_t &bufferSize, size_t id, termxy xy)
+					uint32_t &bufferSize, uint32_t currentId, termxy xy)
 {
 	if ((ch >= ' ' && ch <= '~') || (ch == '\t' || ch == '\n'))
 	{
-		text *newNode = findMemorySlot(*head, id, bufferSize, ch);
+		text *newNode = findMemorySlot(*head, currentId, bufferSize, ch);
 		if (newNode == nullptr)
 		{
 			bufferSize = allocateMoreNodes(head, bufferSize);
-			newNode = findMemorySlot(*head, id, bufferSize, ch);
+			newNode = findMemorySlot(*head, currentId, bufferSize, ch);
+			m_head = m_head == nullptr ? *head : m_head;
 		}
 
 		cursor = addNode(head, newNode, xy.x, xy.y);
@@ -205,7 +201,7 @@ text *edit::addText(text **head, text *cursor, int32_t ch,
 }
 
 text *edit::deleteText(text **head, text *cursor, int32_t ch,
-					   int32_t &delch, size_t &id, termxy xy)
+					   int32_t &delch, uint32_t &currentId, termxy xy)
 {
 	if (ch != KEY_BACKSPACE)
 	{
@@ -219,7 +215,7 @@ text *edit::deleteText(text **head, text *cursor, int32_t ch,
 		delch = cursor != nullptr ? cursor->ch : '\n';
 	}
 
-	return deleteNode(head, xy.x, xy.y, id);
+	return deleteNode(head, xy.x, xy.y, currentId);
 }
 
 text *edit::getKeyUp(text *cursor)
@@ -366,33 +362,37 @@ edit::termxy edit::updateCursor(text *cursor, termxy xy)
 	return xy;
 }
 
-edit::edit(std::string &buffer, size_t bufferSize)
+void edit::run(void)
 {
-
-	curseMode(true);
-
-	text *head = allocateNodesFromBuffer(buffer, bufferSize), *cursor = nullptr;
-	int32_t viewStart = 0, view = 3, delch = 0;
-	size_t id = 0;
+	int32_t viewStart = 0, view = getmaxy(stdscr), dch = 0;
+	uint32_t bufferSize = m_bufferSize, currentId = 0;
 	termxy xy = {0, 0};
+	text *head = m_head, *cursor = nullptr;
 
-	for (int32_t ch = 0; ch != EOF; ch = getch())
+	for (int32_t ch = 0; ch != EOF && ch != KEY_ESCAPE; ch = getch())
 	{
-		getyx(stdscr, xy.y, xy.x);
-
 		// Read user Interaction.
-		cursor = addText(&head, cursor, ch, bufferSize, id, xy);
-		cursor = deleteText(&head, cursor, ch, delch, id, xy);
+		cursor = addText(&head, cursor, ch, bufferSize, currentId, xy);
+		cursor = deleteText(&head, cursor, ch, dch, currentId, xy);
 		cursor = readArrowKeys(head, cursor, ch);
 
 		// Update and redraw.
-		viewStart = setViewStart(view, viewStart, head, cursor, ch, delch);
+		viewStart = setViewStart(view, viewStart, head, cursor, ch, dch);
 		setView(&head, viewStart, view);
 		xy = updateCursor(cursor, xy);
 		printText(head, viewStart, view, xy);
 	}
+}
 
+edit::edit(const std::string &buffer, uint32_t bufferSize) : m_head(allocateNodesFromBuffer(buffer, bufferSize)),
+															 m_bufferSize(bufferSize)
+{
+	curseMode(true);
+}
+
+edit::~edit()
+{
+	deallocateNodes(&m_head);
+	m_head = nullptr;
 	curseMode(false);
-
-	deallocateNodes(&head);
 }
