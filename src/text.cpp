@@ -94,7 +94,7 @@ text *text::deleteNode(text **head, int32_t x, int32_t y, uint32_t &currentId)
 	{
 		if (node->next == nullptr)
 		{
-			deallocateNodes(head);
+			deallocateNodes(*head);
 			currentId = 0;
 			return nullptr;
 		}
@@ -200,8 +200,8 @@ text *text::allocateNodesFromBuffer(const std::string &buffer, uint32_t bufferSi
 	return node;
 }
 
-void text::deallocateNodes(text **head)
+void text::deallocateNodes(text *head)
 {
-	free(*head);
-	*head = nullptr;
+	free(head);
+	head = nullptr;
 }

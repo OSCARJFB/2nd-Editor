@@ -14,7 +14,7 @@
 
 class text
 {
-public: 
+public:
 	bool isInUse;
 	int16_t x, y;
 	int32_t ch;
@@ -28,5 +28,5 @@ protected:
 	text *deleteNode(text **head, int32_t x, int32_t y, uint32_t &currentId);
 	text *allocateNodesFromBuffer(const std::string &buffer, uint32_t bufferSize);
 	uint32_t allocateMoreNodes(text **head, uint32_t bufferSize);
-	void deallocateNodes(text **head);
+	void deallocateNodes(text *head);
 };

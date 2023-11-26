@@ -362,15 +362,32 @@ edit::termxy edit::updateCursor(text *cursor, termxy xy)
 	return xy;
 }
 
+inline int32_t edit::updatePadding(padding &pad, int32_t ch)
+{
+	if ((ch >= ' ' && ch <= '~') || (ch == '\t' || ch == '\n'))
+	{
+		pad.updateLinecount(ch, true);
+	}
+	else if (ch == KEY_BACKSPACE)
+	{
+		pad.updateLinecount(ch, false);
+	}
+
+	return pad.getPadding();
+}
+
 void edit::run(void)
 {
 	int32_t viewStart = 0, view = getmaxy(stdscr), dch = 0;
 	uint32_t bufferSize = m_bufferSize, currentId = 0;
-	termxy xy = {0, 0};
 	text *head = m_head, *cursor = nullptr;
+	padding pad = padding(head);
+	termxy xy = {pad.getPadding(), 0};
 
 	for (int32_t ch = 0; ch != EOF && ch != KEY_ESCAPE; ch = getch())
 	{
+		(void)updatePadding(pad, ch);
+
 		// Read user Interaction.
 		cursor = addText(&head, cursor, ch, bufferSize, currentId, xy);
 		cursor = deleteText(&head, cursor, ch, dch, currentId, xy);
@@ -382,17 +399,4 @@ void edit::run(void)
 		xy = updateCursor(cursor, xy);
 		printText(head, viewStart, view, xy);
 	}
-}
-
-edit::edit(const std::string &buffer, uint32_t bufferSize) : m_head(allocateNodesFromBuffer(buffer, bufferSize)),
-															 m_bufferSize(bufferSize)
-{
-	curseMode(true);
-}
-
-edit::~edit()
-{
-	deallocateNodes(&m_head);
-	m_head = nullptr;
-	curseMode(false);
 }
