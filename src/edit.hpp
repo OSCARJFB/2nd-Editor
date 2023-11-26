@@ -16,15 +16,26 @@ extern "C"
 #include <string>
 #include <cstdint>
 #include "text.hpp"
+#include "padding.hpp"
 
 #define KEY_ESCAPE 27
 
-class edit : text
+class edit : private text
 {
 public:
+	explicit edit(const std::string &buffer, uint32_t bufferSize)
+		: m_bufferSize(bufferSize), m_head(allocateNodesFromBuffer(buffer, bufferSize))
+	{
+		curseMode(true);
+	}
+
+	~edit()
+	{
+		deallocateNodes(m_head);
+		curseMode(false);
+	}
+
 	void run(void);
-	explicit edit(const std::string &buffer, uint32_t bufferSize);
-	~edit();
 
 private:
 	typedef struct termxy
@@ -33,8 +44,8 @@ private:
 	} termxy;
 
 private:
-	const uint32_t &m_bufferSize = 0;
-	text *m_head = nullptr;
+	const uint32_t m_bufferSize;
+	text *m_head;
 
 private:
 	void curseMode(bool isCurse);
@@ -44,6 +55,7 @@ private:
 	bool isNodeAtNextLine(text *node);
 	int32_t setViewStart(int32_t view, int32_t viewStart, text *head, text *cursor, int32_t ch, int32_t dch);
 	int32_t getNewLinesInView(text *node, int32_t view);
+	inline int32_t updatePadding(padding &p, int32_t ch);
 	text *addText(text **head, text *cursor, int32_t ch, uint32_t &bufferSize, uint32_t currentId, termxy xy);
 	text *deleteText(text **head, text *cursor, int32_t ch, int32_t &dch, uint32_t &currentId, termxy xy);
 	text *getKeyUp(text *cursor);
