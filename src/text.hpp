@@ -24,9 +24,9 @@ public:
 protected:
 	text *getNode(text *node, int32_t x, int32_t y);
 	text *findMemorySlot(text *head, uint32_t currentId, uint32_t bufferSize, int32_t ch);
-	text *addNode(text **head, text *newNode, int32_t x, int32_t y);
-	text *deleteNode(text **head, int32_t x, int32_t y, uint32_t &currentId);
+	text *addNode(text **head, text *newNode, int32_t x, int32_t y, int32_t padding);
+	text *deleteNode(text **head, int32_t x, int32_t y, uint32_t &currentId, int32_t padding);
 	text *allocateNodesFromBuffer(const std::string &buffer, uint32_t bufferSize);
 	uint32_t allocateMoreNodes(text **head, uint32_t bufferSize);
-	void deallocateNodes(text *head);
+	void deallocateNodes(text **head);
 };

@@ -19,6 +19,7 @@ extern "C"
 #include "padding.hpp"
 
 #define KEY_ESCAPE 27
+#define STARTNODE getNewLinesInView((m_cursor != nullptr ? getViewStartNode(pad) : m_head), viewEnd)
 
 class edit : private text
 {
@@ -31,7 +32,7 @@ public:
 
 	~edit()
 	{
-		deallocateNodes(m_head);
+		deallocateNodes(&m_head);
 		curseMode(false);
 	}
 
@@ -45,24 +46,25 @@ private:
 
 private:
 	const uint32_t m_bufferSize;
-	text *m_head;
+	text *m_head, *m_cursor = nullptr;
 
 private:
 	void curseMode(bool isCurse);
-	void printText(text *head, int32_t viewStart, int32_t view, termxy xy);
-	void setView(text **head, int32_t viewStart, int32_t view);
+	void printText(int32_t viewStart, int32_t view, const termxy &xy);
+	void setView(int32_t viewStart, int32_t view, const padding& pad);
+	void updateCursor(termxy &xy, const padding &pad);
+	void updatePadding(padding &p, int32_t ch);
+	void printLines(int32_t newLines, int32_t newLinesInView);
 	bool isNodeAtPrevLine(text *node);
 	bool isNodeAtNextLine(text *node);
-	int32_t setViewStart(int32_t view, int32_t viewStart, text *head, text *cursor, int32_t ch, int32_t dch);
+	int32_t setViewStart(int32_t viewStart, int32_t viewEnd, int32_t ch, int32_t d_ch, const padding &pad);
 	int32_t getNewLinesInView(text *node, int32_t view);
-	inline int32_t updatePadding(padding &p, int32_t ch);
-	text *addText(text **head, text *cursor, int32_t ch, uint32_t &bufferSize, uint32_t currentId, termxy xy);
-	text *deleteText(text **head, text *cursor, int32_t ch, int32_t &dch, uint32_t &currentId, termxy xy);
-	text *getKeyUp(text *cursor);
-	text *getKeyDown(text *cursor, text *head);
-	text *getKeyLeft(text *cursor);
-	text *getKeyRight(text *cursor, text *head);
-	text *readArrowKeys(text *head, text *cursor, int32_t ch);
-	text *getViewStartNode(text *cursor);
-	termxy updateCursor(text *cursor, termxy xy);
+	text *addText(int32_t ch, uint32_t &bufferSize, uint32_t currentId, const termxy& xy, const padding& pad);
+	text *deleteText(int32_t ch, int32_t &d_ch, uint32_t &currentId, const termxy& xy, const padding& pad);
+	text *getKeyUp(void);
+	text *getKeyDown(void);
+	text *getKeyLeft(void);
+	text *getKeyRight(void);
+	text *readArrowKeys(int32_t ch);
+	text *getViewStartNode(const padding& pad);
 };

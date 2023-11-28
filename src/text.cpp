@@ -27,14 +27,14 @@ text *text::getNode(text *node, int32_t x, int32_t y)
 	return node;
 }
 
-text *text::addNode(text **head, text *newNode, int32_t x, int32_t y)
+text *text::addNode(text **head, text *newNode, int32_t x, int32_t y, int32_t padding)
 {
 	text *node = getNode(*head, x, y);
 	if (*head == newNode) // First node, head node.
 	{
 		return *head;
 	}
-	else if (x == 0 && y == 0 && node->prev == nullptr) // At head node.
+	else if (x == padding && y == 0 && node->prev == nullptr) // At head node.
 	{
 		int32_t ch = (*head)->ch;
 		(*head)->ch = newNode->ch;
@@ -71,9 +71,9 @@ text *text::addNode(text **head, text *newNode, int32_t x, int32_t y)
 	return newNode;
 }
 
-text *text::deleteNode(text **head, int32_t x, int32_t y, uint32_t &currentId)
+text *text::deleteNode(text **head, int32_t x, int32_t y, uint32_t &currentId, int32_t padding)
 {
-	if (*head == nullptr || (x == 0 && y == 0)) // Nothing to delete.
+	if (*head == nullptr || (x == padding && y == 0)) // Nothing to delete.
 	{
 		return nullptr;
 	}
@@ -94,7 +94,7 @@ text *text::deleteNode(text **head, int32_t x, int32_t y, uint32_t &currentId)
 	{
 		if (node->next == nullptr)
 		{
-			deallocateNodes(*head);
+			deallocateNodes(head);
 			currentId = 0;
 			return nullptr;
 		}
@@ -200,8 +200,8 @@ text *text::allocateNodesFromBuffer(const std::string &buffer, uint32_t bufferSi
 	return node;
 }
 
-void text::deallocateNodes(text *head)
+void text::deallocateNodes(text **head)
 {
-	free(head);
-	head = nullptr;
+	free(*head);
+	*head = nullptr;
 }
