@@ -22,15 +22,28 @@ void edit::curseMode(bool isCurse)
 	endwin();
 }
 
-void edit::printText(text *head, int32_t viewStart, int32_t view, termxy xy)
+void edit::printLines(int32_t newLines, int32_t newLinesInView)
+{
+		for(int i = 0; i <= newLinesInView; ++i)
+		{
+			mvwprintw(stdscr,  y + i, 0, "%d:", newLines + i + 1);
+		}
+}
+
+void edit::printText(int32_t viewStart, int32_t view, const termxy &xy)
 {
 	clear();
 
+	if(m_head == nullptr)
+	{
+		printw("%d:", 1);
+	}
+
 	// Loop each item in the list, start printing to terminal once inside the view range.
 	int32_t newLines = 0, newLinesInView = 0;
-	for (text *node = head; node != nullptr; node = node->next)
+	for (text *node = m_head; node != nullptr; node = node->next)
 	{
-		newLines += node->ch == '\n' ? 1 : 0;
+		newLines += node->ch && viewStart > newLines == '\n' ? 1 : 0;
 		if (viewStart > newLines)
 		{
 			continue;
@@ -45,22 +58,23 @@ void edit::printText(text *head, int32_t viewStart, int32_t view, termxy xy)
 		mvwaddch(stdscr, node->y, node->x, node->ch);
 	}
 
+	printLines(newLines, newLinesInView); 
 	move(xy.y, xy.x);
 
 	refresh();
 }
 
-text *edit::getViewStartNode(text *cursor)
+text *edit::getViewStartNode(const padding &pad)
 {
-	if (cursor == nullptr)
+	if (m_cursor == nullptr)
 	{
-		return cursor;
+		return m_cursor;
 	}
 
-	text *node = cursor->prev;
+	text *node = m_cursor->prev;
 	for (; node != nullptr; node = node->prev)
 	{
-		if (node->y == 0 && node->x == 0)
+		if (node->y == 0 && node->x == pad.getPadding())
 		{
 			break;
 		}
@@ -114,43 +128,38 @@ bool edit::isNodeAtNextLine(text *node)
 	return true;
 }
 
-int32_t edit::setViewStart(int32_t view, int32_t viewStart, text *head,
-						   text *cursor, int32_t ch, int32_t delch)
+int32_t edit::setViewStart(int32_t viewStart, int32_t viewEnd, int32_t ch, int32_t d_ch, const padding &pad)
 {
-	if (head == nullptr)
+	if (m_head == nullptr)
 	{
 		return viewStart;
 	}
 
-	if (ch == KEY_BACKSPACE && viewStart != 0 && delch == '\n')
+	if (ch == KEY_BACKSPACE && viewStart != 0 && d_ch == '\n')
 	{
-		return --viewStart;
+		--viewStart;
 	}
-
-	if (ch == KEY_UP && isNodeAtPrevLine(cursor) && cursor->y == 0)
+	else if (ch == KEY_UP && isNodeAtPrevLine(m_cursor) && m_cursor->y == 0)
 	{
-		return --viewStart;
+		--viewStart;
 	}
-
-	if (ch == KEY_DOWN && isNodeAtNextLine(cursor) && cursor->y == -1)
+	else if (ch == KEY_DOWN && isNodeAtNextLine(m_cursor) && m_cursor->y == -1)
 	{
-		return ++viewStart;
+		++viewStart;
 	}
-
-	text *startNode = cursor != nullptr ? getViewStartNode(cursor) : head;
-	if (ch == '\n' && view == getNewLinesInView(startNode, view))
+	else if (ch == '\n' && viewEnd == STARTNODE)
 	{
-		return ++viewStart;
+		++viewStart;
 	}
 
 	return viewStart;
 }
 
-void edit::setView(text **head, int32_t viewStart, int32_t view)
+void edit::setView(int32_t viewStart, int32_t view, const padding& pad)
 {
 	bool isViewSet = false;
-	int32_t newLines = 0, newLinesInView = 0, x = 0, y = 0;
-	for (text *node = *head; node != nullptr; node = node->next)
+	int32_t newLines = 0, newLinesInView = 0, x = pad.getPadding(), y = 0;
+	for (text *node = m_head; node != nullptr; node = node->next)
 	{
 		node->x = node->y = -1; // outside of view.
 		if (newLines >= viewStart && !isViewSet)
@@ -162,7 +171,7 @@ void edit::setView(text **head, int32_t viewStart, int32_t view)
 			x += node->ch == '\t' ? 8 : 1;
 			if (node->ch == '\n')
 			{
-				x = 0;
+				x = pad.getPadding();
 				++y;
 			}
 		}
@@ -181,93 +190,91 @@ void edit::setView(text **head, int32_t viewStart, int32_t view)
 	}
 }
 
-text *edit::addText(text **head, text *cursor, int32_t ch,
-					uint32_t &bufferSize, uint32_t currentId, termxy xy)
+text *edit::addText(int32_t ch, uint32_t &bufferSize, uint32_t currentId, const termxy &xy, const padding &pad)
 {
 	if ((ch >= ' ' && ch <= '~') || (ch == '\t' || ch == '\n'))
 	{
-		text *newNode = findMemorySlot(*head, currentId, bufferSize, ch);
+		text *newNode = findMemorySlot(m_head, currentId, bufferSize, ch);
 		if (newNode == nullptr)
 		{
-			bufferSize = allocateMoreNodes(head, bufferSize);
-			newNode = findMemorySlot(*head, currentId, bufferSize, ch);
-			m_head = m_head == nullptr ? *head : m_head;
+			bufferSize = allocateMoreNodes(&m_head, bufferSize);
+			newNode = findMemorySlot(m_head, currentId, bufferSize, ch);
+			m_head = m_head == nullptr ? newNode : m_head;
 		}
 
-		cursor = addNode(head, newNode, xy.x, xy.y);
+		return addNode(&m_head, newNode, xy.x, xy.y, pad.getPadding());
 	}
 
-	return cursor;
+	return m_cursor;
 }
 
-text *edit::deleteText(text **head, text *cursor, int32_t ch,
-					   int32_t &delch, uint32_t &currentId, termxy xy)
+text *edit::deleteText(int32_t ch, int32_t &d_ch, uint32_t &currentId, const termxy &xy, const padding &pad)
 {
 	if (ch != KEY_BACKSPACE)
 	{
-		return cursor;
+		return m_cursor;
 	}
 
 	// If head is not NULL return
-	if (head != nullptr)
+	if (m_head != nullptr)
 	{
 		// If the cursor is NULL deleted character is a newline (end of view).
-		delch = cursor != nullptr ? cursor->ch : '\n';
+		d_ch = m_cursor != nullptr ? m_cursor->ch : '\n';
 	}
 
-	return deleteNode(head, xy.x, xy.y, currentId);
+	return deleteNode(&m_head, xy.x, xy.y, currentId, pad.getPadding());
 }
 
-text *edit::getKeyUp(text *cursor)
+text *edit::getKeyUp(void)
 {
 	// beginning of the list or end of terminal view.
-	if (cursor == nullptr || (cursor->y == 0 && cursor->ch != '\n'))
+	if (m_cursor == nullptr || (m_cursor->y == 0 && m_cursor->ch != '\n'))
 	{
-		return cursor;
+		return m_cursor;
 	}
 
-	if (cursor->prev == nullptr && cursor->ch == '\n')
+	if (m_cursor->prev == nullptr && m_cursor->ch == '\n')
 	{
 		return nullptr;
 	}
 
-	for (; cursor->prev != nullptr; cursor = cursor->prev)
+	for (; m_cursor->prev != nullptr; m_cursor = m_cursor->prev)
 	{
-		if (cursor->ch == '\n')
+		if (m_cursor->ch == '\n')
 		{
-			cursor = cursor->prev;
+			m_cursor = m_cursor->prev;
 			break;
 		}
 	}
 
-	return cursor;
+	return m_cursor;
 }
 
-text *edit::getKeyDown(text *cursor, text *head)
+text *edit::getKeyDown(void)
 {
-	if (cursor == nullptr)
+	if (m_cursor == nullptr)
 	{
-		cursor = head;
-		if (head == nullptr)
+		m_cursor = m_head;
+		if (m_head == nullptr)
 		{
 			return nullptr;
 		}
 	}
 
-	if (cursor->next != nullptr && cursor->next->next != nullptr &&
-		cursor->next->ch == '\n' && cursor->next->next->ch == '\n')
+	if (m_cursor->next != nullptr && m_cursor->next->next != nullptr &&
+		m_cursor->next->ch == '\n' && m_cursor->next->next->ch == '\n')
 	{
-		cursor = cursor->next;
-		return cursor;
+		m_cursor = m_cursor->next;
+		return m_cursor;
 	}
 
-	for (; cursor->next != nullptr; cursor = cursor->next)
+	for (; m_cursor->next != nullptr; m_cursor = m_cursor->next)
 	{
-		if (cursor->ch == '\n')
+		if (m_cursor->ch == '\n')
 		{
-			for (cursor = cursor->next; cursor->next != nullptr; cursor = cursor->next)
+			for (m_cursor = m_cursor->next; m_cursor->next != nullptr; m_cursor = m_cursor->next)
 			{
-				if (cursor->next->ch == '\n')
+				if (m_cursor->next->ch == '\n')
 				{
 					break;
 				}
@@ -276,40 +283,40 @@ text *edit::getKeyDown(text *cursor, text *head)
 		}
 	}
 
-	return cursor;
+	return m_cursor;
 }
 
-text *edit::getKeyLeft(text *cursor)
+text *edit::getKeyLeft(void)
 {
-	if (cursor != nullptr && cursor->prev != nullptr)
+	if (m_cursor != nullptr && m_cursor->prev != nullptr)
 	{
-		cursor = cursor->prev;
+		m_cursor = m_cursor->prev;
 	}
 	else
 	{
-		cursor = nullptr;
+		m_cursor = nullptr;
 	}
 
-	return cursor;
+	return m_cursor;
 }
 
-text *edit::getKeyRight(text *cursor, text *head)
+text *edit::getKeyRight(void)
 {
-	if (cursor != nullptr && cursor->next != nullptr)
+	if (m_cursor != nullptr && m_cursor->next != nullptr)
 	{
-		cursor = cursor->next;
+		m_cursor = m_cursor->next;
 	}
-	else if (cursor == nullptr)
+	else if (m_cursor == nullptr)
 	{
-		cursor = head;
+		m_cursor = m_head;
 	}
 
-	return cursor;
+	return m_cursor;
 }
 
-text *edit::readArrowKeys(text *head, text *cursor, int32_t ch)
+text *edit::readArrowKeys(int32_t ch)
 {
-	if (head == nullptr)
+	if (m_head == nullptr)
 	{
 		return nullptr;
 	}
@@ -317,52 +324,50 @@ text *edit::readArrowKeys(text *head, text *cursor, int32_t ch)
 	switch (ch)
 	{
 	case KEY_UP:
-		cursor = getKeyUp(cursor);
+		m_cursor = getKeyUp();
 		break;
 	case KEY_DOWN:
-		cursor = getKeyDown(cursor, head);
+		m_cursor = getKeyDown();
 		break;
 	case KEY_LEFT:
-		cursor = getKeyLeft(cursor);
+		m_cursor = getKeyLeft();
 		break;
 	case KEY_RIGHT:
-		cursor = getKeyRight(cursor, head);
+		m_cursor = getKeyRight();
 		break;
 	}
 
-	return cursor;
+	return m_cursor;
 }
 
-edit::termxy edit::updateCursor(text *cursor, termxy xy)
+void edit::updateCursor(termxy &xy, const padding &pad)
 {
-	if (cursor == nullptr)
+	if (m_cursor == nullptr)
 	{
-		xy.x = 0;
+		xy.x = pad.getPadding();
 		xy.y = 0;
 	}
 	else
 	{
-		switch (cursor->ch)
+		switch (m_cursor->ch)
 		{
 		case '\n':
-			xy.x = 0;
-			xy.y = cursor->y + 1;
+			xy.x = pad.getPadding();
+			xy.y = m_cursor->y + 1;
 			break;
 		case '\t':
-			xy.x = cursor->x + 8;
-			xy.y = cursor->y;
+			xy.x = m_cursor->x + 8;
+			xy.y = m_cursor->y;
 			break;
 		default:
-			xy.x = cursor->x + 1;
-			xy.y = cursor->y;
+			xy.x = m_cursor->x + 1;
+			xy.y = m_cursor->y;
 			break;
 		}
 	}
-
-	return xy;
 }
 
-inline int32_t edit::updatePadding(padding &pad, int32_t ch)
+void edit::updatePadding(padding &pad, int32_t ch)
 {
 	if ((ch >= ' ' && ch <= '~') || (ch == '\t' || ch == '\n'))
 	{
@@ -372,31 +377,29 @@ inline int32_t edit::updatePadding(padding &pad, int32_t ch)
 	{
 		pad.updateLinecount(ch, false);
 	}
-
-	return pad.getPadding();
 }
 
 void edit::run(void)
 {
-	int32_t viewStart = 0, view = getmaxy(stdscr), dch = 0;
+	int32_t viewStart = 0, viewEnd = getmaxy(stdscr), d_ch = 0;
 	uint32_t bufferSize = m_bufferSize, currentId = 0;
-	text *head = m_head, *cursor = nullptr;
-	padding pad = padding(head);
+	padding pad = padding(m_head);
 	termxy xy = {pad.getPadding(), 0};
 
 	for (int32_t ch = 0; ch != EOF && ch != KEY_ESCAPE; ch = getch())
 	{
-		(void)updatePadding(pad, ch);
+		// Set the current padding which forms the left bound border.
+		updatePadding(pad, ch);
 
 		// Read user Interaction.
-		cursor = addText(&head, cursor, ch, bufferSize, currentId, xy);
-		cursor = deleteText(&head, cursor, ch, dch, currentId, xy);
-		cursor = readArrowKeys(head, cursor, ch);
+		m_cursor = addText(ch, bufferSize, currentId, xy, pad);
+		m_cursor = deleteText(ch, d_ch, currentId, xy, pad);
+		m_cursor = readArrowKeys(ch);
 
 		// Update and redraw.
-		viewStart = setViewStart(view, viewStart, head, cursor, ch, dch);
-		setView(&head, viewStart, view);
-		xy = updateCursor(cursor, xy);
-		printText(head, viewStart, view, xy);
+		viewStart = setViewStart(viewStart, viewEnd, ch, d_ch, pad);
+		setView(viewStart, viewEnd, pad);
+		updateCursor(xy, pad);
+		printText(viewStart, viewEnd, xy);
 	}
 }
