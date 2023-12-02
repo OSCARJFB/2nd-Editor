@@ -24,17 +24,17 @@ void edit::curseMode(bool isCurse)
 
 void edit::printLines(int32_t newLines, int32_t newLinesInView)
 {
-		for(int i = 0; i <= newLinesInView; ++i)
-		{
-			mvwprintw(stdscr,  y + i, 0, "%d:", newLines + i + 1);
-		}
+	for (int i = 0; i <= newLinesInView; ++i)
+	{
+		mvwprintw(stdscr, y + i, 0, "%d:", newLines + i + 1);
+	}
 }
 
 void edit::printText(int32_t viewStart, int32_t view, const termxy &xy)
 {
 	clear();
 
-	if(m_head == nullptr)
+	if (m_head == nullptr)
 	{
 		printw("%d:", 1);
 	}
@@ -58,7 +58,7 @@ void edit::printText(int32_t viewStart, int32_t view, const termxy &xy)
 		mvwaddch(stdscr, node->y, node->x, node->ch);
 	}
 
-	printLines(newLines, newLinesInView); 
+	printLines(newLines, newLinesInView);
 	move(xy.y, xy.x);
 
 	refresh();
@@ -139,7 +139,8 @@ int32_t edit::setViewStart(int32_t viewStart, int32_t viewEnd, int32_t ch, int32
 	{
 		--viewStart;
 	}
-	else if (ch == KEY_UP && isNodeAtPrevLine(m_cursor) && m_cursor->y == 0)
+	else if (ch == KEY_UP && isNodeAtPrevLine(m_cursor) &&
+			 (m_cursor->y == 0 || m_cursor->y == -1) && viewStart != 0)
 	{
 		--viewStart;
 	}
@@ -155,7 +156,7 @@ int32_t edit::setViewStart(int32_t viewStart, int32_t viewEnd, int32_t ch, int32
 	return viewStart;
 }
 
-void edit::setView(int32_t viewStart, int32_t view, const padding& pad)
+void edit::setView(int32_t viewStart, int32_t view, const padding &pad)
 {
 	bool isViewSet = false;
 	int32_t newLines = 0, newLinesInView = 0, x = pad.getPadding(), y = 0;
