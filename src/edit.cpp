@@ -43,7 +43,7 @@ void edit::printText(int32_t viewStart, int32_t view, const termxy &xy)
 	int32_t newLines = 0, newLinesInView = 0;
 	for (text *node = m_head; node != nullptr; node = node->next)
 	{
-		newLines += node->ch && viewStart > newLines == '\n' ? 1 : 0;
+		newLines += node->ch == '\n' && viewStart > newLines ? 1 : 0;
 		if (viewStart > newLines)
 		{
 			continue;
